@@ -1,0 +1,113 @@
+.svg_container {
+	margin:5px; padding: 2px;
+	min-height: 350px;
+	
+}
+					
+svg .plotTitle {
+	stroke: none;
+	fill: 0.5;
+	font-weight: bold;
+	font-family: Arial;
+	font-size: 14px; 
+}
+					
+svg .gridDash {
+	fill: none;
+	stroke-width: 1px;
+	stroke: black; 
+}
+					
+svg .frame {
+	fill: none;
+	stroke: black;
+	stroke-width:2px; 
+}
+					
+svg .notesX, svg .notesY {
+	stroke: none;
+	fill: 0.5; 
+	font-weight: bold;
+	font-family: Arial;
+	font-size: 10px; 
+}
+					
+svg .Xtitle, svg .Ytitle {
+	stroke: none; 
+	fill: 0.5;
+	font-weight: bold;
+	font-family: Arial; 
+	font-size: 10px;
+}
+					
+svg .linePlot {
+	fill:none;
+	stroke:black;
+	stroke-width:3px;
+}
+
+.zoomingY {
+	float: left;
+	margin-right: 5px;
+}
+
+input, button {
+	margin: 5px;
+}
+					
+.inputFrame {
+	border: 2px solid black;
+	margin: 0 5px 5px 5px;
+	padding: 5px;	
+	float:left;
+}
+					
+.zoomingY .inputFrame {
+	width: 150px;
+}
+					
+.svg_container {
+	border: 2px solid black;
+}
+					
+.zoomingX {
+	margin-left: 200px;
+}
+
+
+.st_threshold_line {
+	fill:none;
+	stroke: red;
+	stroke-width:3px;
+}
+
+.sp_threshold_line1, .sp_threshold_line2 {
+	fill:none;
+	stroke: green;
+	stroke-width:3px;
+}
+
+.add_threshold {
+	/*max-width: 100px;*/
+
+}
+
+.thresholdTable {
+	padding-top: 5px;
+
+}
+
+.thresholdTable th, .thresholdTable td {
+	border-style:solid;
+	border-width:2px;
+	border-collapse:collapse;
+	padding:5px;
+	width: 50px;
+}
+.thresholdTable th {
+	height:28px;
+	background-color: #E6E6FA;
+	color: black;
+	border-color:black;
+}
+

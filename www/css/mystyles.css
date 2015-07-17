@@ -1,0 +1,63 @@
+.program_title {
+	color: #FFFFFF;
+	font-size: 22px;
+	font-weight:bold;
+	padding-top: 30px;
+	margin-left: 120px;
+	margin-right: 520px;
+}
+
+.logotip_img {
+	width: 100px;
+	height:100px; 
+}
+.menutitle {
+	color:#1B548D;
+	font-size: 12px;
+	font-weight:bold;
+	padding: 10px;
+
+}
+
+.edit_ref {
+	color: #1DB336;
+}
+
+.delete_ref {
+	color: #BE1412;
+}
+
+.ui-state-header {
+    padding: 0;
+    background-color: #E6E6FA;
+}
+
+/*
+.ui-datepicker-title, .ui-datepicker-prev, .ui-datepicker-next  {
+	background-color: #E6E6FA;
+	color: #000;
+	margin: 0;
+	padding: 0;
+	
+}
+*/
+
+.group_name_at_home {
+	font-style:italic;
+	text-align:center; 
+	padding:5px;
+
+}
+
+#menu_of_linked_nodes {
+	margin: 5px;
+	min-height: 50px;
+	background: #E6F0F3;
+}
+
+.button_top_menu {
+	float: left;
+	margin: 5px;
+
+}
+
