@@ -29,6 +29,9 @@ sub set_config {
 	use constant ENTER_POINT => GCI_SCRIPTS_DIR."index.pl";
 	use constant TITLE => "cerebrum";
 	use constant UPLOAD_DIR => "/home/ivan/mysites/upload/";
+	
+	use constant SOURCE_DIR => "/home/ivan/mysites/sources_files/";
+	
 	use constant JS_DIR => PATH."js/";
 	use constant JS_ROR_MODULS_DIR => JS_DIR."ajax/";
 	use constant MAT_FILES_DIR => "/home/ivan/mysites/mat_files/";
