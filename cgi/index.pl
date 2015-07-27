@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 # this script is point of enter in application
+print "Content-Type: text/html charset=utf-8\n\n";
 
 use strict;
 use warnings;
@@ -16,7 +17,7 @@ our %_getpost;
 our $_session;
 
 
-print ("Content-Type: text/html charset=utf-8\n\n");
+
 
 my $view;
 if (defined ($_getpost{'view'})) {

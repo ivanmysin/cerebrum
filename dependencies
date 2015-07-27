@@ -1,0 +1,9 @@
+# dependencies
+
+apt-get install libpdl-io-matlab-perl
+
+cpan install Switch
+
+cpan install Switch
+
+
