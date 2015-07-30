@@ -17,7 +17,7 @@ App.params.sp_threshold_line2 = new Array();
 App.add_new_threshold = {  // Добавляем или нет новый порог
 	add: false,
 	side: 'top'
-}
+};
 //////////////////////////////////////////////////////////////////////////
 $(document).ready(function(){
 	
@@ -26,7 +26,7 @@ $(document).ready(function(){
 		'registrated_node_id':App.registrated_node_id, 
 		'parent_processing_node_id':App.parent_processing_node_id, 
 		'regime': 'read',
-		}; 
+	}; 
 	$.ajax({
 		url: App.server_script,  
 		type: "GET",

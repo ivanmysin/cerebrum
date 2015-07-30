@@ -918,10 +918,10 @@ sub print_processing {
 	
 	my $html_code = $registrated_data->{'html_code'};
 	my $server_script = MUDULES_CONTROLLER;
-	my $js_file = JS_ROR_MODULS_DIR.$registrated_data->{'js_file'};
+	my $js_file = JS_FOR_MODULS_DIR.$registrated_data->{'js_file'};
 	my $css_file = CSS_FILES_MODULES_DIR.$registrated_data->{'css_file'};
 
-		
+	#my $js_dir = JS_FOR_MODULS_DIR;
 	print qq(
 	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
     <div class="grid_10">
@@ -937,7 +937,6 @@ sub print_processing {
 				App.record_id = $record_id;
 				App.params = {};   // structure for sending parameters to server in json format
 			</script>
-			<script src="$js_file" type="text/javascript"></script>
 			<div id="menu_of_linked_nodes">
 	);
 	
@@ -963,6 +962,7 @@ sub print_processing {
 				$html_code
             
             </div> <!-- #procc_container -->
+            <script src="$js_file" type="text/javascript"></script>
 
 	);
 	

@@ -29,11 +29,11 @@ sub set_config {
 	use constant ENTER_POINT => GCI_SCRIPTS_DIR."index.pl";
 	use constant TITLE => "cerebrum";
 	use constant UPLOAD_DIR => "/home/ivan/mysites/upload/";
-	
+
 	use constant SOURCE_DIR => "/home/ivan/mysites/sources_files/";
 	
 	use constant JS_DIR => PATH."js/";
-	use constant JS_ROR_MODULS_DIR => JS_DIR."ajax/";
+	use constant JS_FOR_MODULS_DIR => JS_DIR."ajax/";
 	use constant MAT_FILES_DIR => "/home/ivan/mysites/mat_files/";
 	use constant CGI_MODULES_DIR => GCI_SCRIPTS_DIR."processing_scripts/";
 	use constant CSS_FILES_DIR => PATH."css/";
@@ -41,6 +41,7 @@ sub set_config {
 	use constant SESSION_FILES_DIR => "sessions/";
 	use constant MUDULES_CONTROLLER => GCI_SCRIPTS_DIR."modules_controller.pl";
 	use constant MAT_FILES_ORIGIN => "origin/";
+	use constant HTML_TEMPLATES_DIR => "../www/html_template/";
 	
 	my $db = "cerebrum";               # data base
 	my $db_user = "root";              # user of db
@@ -230,5 +231,23 @@ sub save_session {
 	store($_session, SESSION_FILES_DIR.$file) or die "Can't store session\n";
 }
 
+########################################################################
+sub read_file {
+	my $file = shift;
+	my $die;
+	$die ="die" if (not defined $die);
+	if ($die eq "die"){
+		open(FILEREADFILE,"< $file") || die "Cann't open file $file:$!\n";
+		}else{
+		open(FILEREADFILE,"< $file") || return "";
+		}
+	my $old=$/;
+	undef $/;           # enable "slurp" mode
+	my $file_content = <FILEREADFILE>;
+	close(FILEREADFILE);
+	$/=$old;
+	$file_content='' if not $file_content;
+	return $file_content;
+}
 ########################################################################
 1;

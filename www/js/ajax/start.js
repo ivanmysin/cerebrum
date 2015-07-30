@@ -30,8 +30,6 @@ $(document).ready(function(){
 		});
 		
 		
-	
-		
 	});
 
 	
@@ -39,6 +37,9 @@ $(document).ready(function(){
 //////////////////////////////////////////////////////////////////////////
 function myCallback(returnedData) {
 	$("#uploadData").remove();
+	
+	console.log(returnedData);
+	
 	App.plotData = returnedData;
 	var nchs = App.plotData.length;
 	var mainDivContainer = $("#procc_container");

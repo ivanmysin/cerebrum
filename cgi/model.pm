@@ -306,7 +306,7 @@ sub get_home_data {
 ########################################################################
 sub get_processing_data {
 	my $node_id = shift;
-	my $query = "SELECT * FROM processing_nodes WHERE id='$node_id'";
+	# my $query = "SELECT * FROM processing_nodes WHERE id='$node_id'";
 	my $newQuery =  qq(
 	SELECT registrated_nodes.name AS module_name, records.name AS record_name, processing_nodes.id, 
 	processing_nodes.id_parent_nodes, processing_nodes.id_registrated_node, processing_nodes.mat_file FROM 
@@ -359,6 +359,15 @@ sub get_registrated_data {
 	my $node_id = shift;
 	my $query = "SELECT * FROM registrated_nodes WHERE id='$node_id'";
 	my @res = &mysql_select_query($query);
+	
+	my $html = $res[0]->{'html_code'};
+	
+	if (substr($html, 0, 5) eq "file=") {
+		my $file = HTML_TEMPLATES_DIR . substr($html, 5);
+		$html = &read_file($file);
+		$res[0]->{'html_code'} = $html;
+	};
+	
 	return $res[0];
 }
 ########################################################################

@@ -25,6 +25,7 @@ my $regime = $_getpost{'regime'};
 my $server_params =  substr ($_getpost{"server_json_params"}, 1, -1);
 $server_params = from_json($server_params);
 
+
 my $data = matlab_read($sources_file);
 
 switch ($regime) {
@@ -92,10 +93,25 @@ switch ($regime) {
 					my $rate_by_bins = histogram($spikes, $bin, 0, int(max($spikes)/$bin)+1);
 					$rate_by_bins = double($rate_by_bins) / $bin;
 										
-					my @arr = list($rate_by_bins);
+					my @y_arr = list($rate_by_bins);
+					my $x_vals = sequence (nelem($rate_by_bins)) / $bin;
+					my @x_arr = list ($x_vals);
 					
-					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'y_vals'} = \@arr;
-					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_step'} = $bin;
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'y_vals'} = \@y_arr;
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_vals'} = \@x_arr;
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'plot_label'} = "Rate plot by bins";
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_label'} = "time, s";
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'y_label'} = "rate, sp/s";
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'minX'} = 0;
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'maxX'} = max ($x_vals);
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'minY'} = 0;
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'maxY'} = 1.2*max($rate_by_bins);
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'binGridX'} = $bin;
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'binGridY'} = 0.1 * max($rate_by_bins);
+		
 					
 					# Получили интегралку, разбитую по бинам
 					# save data to send
@@ -113,6 +129,24 @@ switch ($regime) {
 					my @x_arr = list($moment_rate_x);
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'y_vals'} = \@y_arr;
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'x_vals'} = \@x_arr;
+					
+					
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'plot_label'} = "Moment rate plot";
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'x_label'} = "time, s";
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'y_label'} = "rate, sp/s";
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'minX'} = 0;
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'maxX'} = max ($moment_rate_x);
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'minY'} = 0;
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'maxY'} = 1.2*max($moment_rate_y);
+					
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'binGridX'} = 0.05 * max($moment_rate_x);
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'binGridY'} = 0.1 * max($moment_rate_y);
+					
+					
+					
+					
 				}
 				
 

@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 use warnings;
-
 use strict;
 use JSON;
 use PDL;
@@ -32,8 +31,8 @@ my $data =  matlab_read($sources_file);
 
 
 my $server_params = substr ($_getpost{"server_json_params"}, 1, -1);
-$server_params = from_json($server_params);
 
+$server_params = from_json($server_params);
 
 
 my $fd = $server_params->{'fd'}; # $fd is discritisation frequency of wav data
@@ -44,7 +43,7 @@ $data = double($data);
 switch ($regime) {
 	case("read") {
 		
-		my $intT = 10000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		my $intT = 10000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -1
 		my @send_array;
 		my $title = 'Potential';
 		for (my $i=0; $i<$nchs; $i++) {
