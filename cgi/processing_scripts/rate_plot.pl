@@ -22,9 +22,10 @@ my $sources_file = $_getpost{'source_file'};
 my $target_file = $_getpost{'target_file'};
 my $regime = $_getpost{'regime'};
 
-my $server_params =  substr ($_getpost{"server_json_params"}, 1, -1);
-$server_params = from_json($server_params);
 
+my $server_params = &cut_end_qouts($_getpost{"server_json_params"});
+
+$server_params = from_json($server_params);
 
 my $data = matlab_read($sources_file);
 
@@ -101,8 +102,8 @@ switch ($regime) {
 					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_vals'} = \@x_arr;
 					
 					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'plot_label'} = "Rate plot by bins";
-					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_label'} = "time, s";
-					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'y_label'} = "rate, sp/s";
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'x_labels'} = "time, s";
+					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'y_labels'} = "rate, sp/s";
 					
 					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'minX'} = 0;
 					${$send_vals[$i]->{'plots'}}[$j]->{"rate_by_bins"}->{'maxX'} = max ($x_vals);
@@ -133,8 +134,8 @@ switch ($regime) {
 					
 					
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'plot_label'} = "Moment rate plot";
-					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'x_label'} = "time, s";
-					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'y_label'} = "rate, sp/s";
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'x_labels'} = "time, s";
+					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'y_labels'} = "rate, sp/s";
 					
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'minX'} = 0;
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'maxX'} = max ($moment_rate_x);

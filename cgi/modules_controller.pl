@@ -39,7 +39,7 @@ $user_query = $_;
 
 $script_query = CGI_MODULES_DIR.$processing_parameters->{'server_ajax_file'}."/?".$user_query."&source_file=".MAT_FILES_DIR.$processing_parameters->{'source_file_dir'}.$processing_parameters->{'sourse_file'};
 $script_query = $script_query."&target_file=".MAT_FILES_DIR.$processing_parameters->{'target_file_dir'}.$processing_parameters->{'target_file'};
-$script_query = $script_query.qq(&server_json_params="$processing_parameters->{'server_json_params'}");
+$script_query = $script_query.qq(&server_json_params=$processing_parameters->{'server_json_params'});
 
 &redirect($script_query); 
 

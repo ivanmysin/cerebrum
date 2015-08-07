@@ -30,9 +30,8 @@ my $target_file = $_getpost{'target_file'};
 my $data =  matlab_read($sources_file); 
 
 
-my $server_params = substr ($_getpost{"server_json_params"}, 1, -1);
+my $server_params = from_json($_getpost{"server_json_params"});
 
-$server_params = from_json($server_params);
 
 
 my $fd = $server_params->{'fd'}; # $fd is discritisation frequency of wav data

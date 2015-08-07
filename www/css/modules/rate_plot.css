@@ -21,7 +21,17 @@
 	min-height: 350px;
 	
 }
-					
+
+.svg_wrapper {
+	padding: 0;
+	float: left;
+}
+
+svg {
+	margin: 0;
+
+}
+				
 svg .plotTitle {
 	stroke: none;
 	fill: 0.5;
@@ -81,15 +91,16 @@ input, button {
 }
 					
 .zoomingY .inputFrame {
-	width: 150px;
+	width: 120px;
 }
 					
 .svg_container {
-	border: 2px solid black;
+	float:left;
 }
 					
 .zoomingX {
 	margin-left: 200px;
+
 }
 
 
@@ -112,7 +123,14 @@ input, button {
 
 .boundTable {
 	padding-top: 5px;
+	width: 100%;
+}
+
+
+.div_bounds_table {
+	width: 400px;
 	float: right;
+	margin: 5px;
 }
 
 .boundTable th, .boundTable td {
@@ -130,3 +148,25 @@ input, button {
 	border-color:black;
 }
 
+.one_neuron {
+	border: 2px solid black;
+}
+
+.one_plot {
+	margin: 0 5px 50px 5px;
+}
+
+.add_bounds {
+	margin: 5px 5px 10px 0;
+	font-size: 14px;
+	font-weight: bold;
+
+}
+
+.add_bounds input[type="text"] {
+ 	border: 2px solid #000; 
+	background: #ffffff !important; 
+	outline: none; 
+	height: 14px;
+	font-size: 14px;
+} 

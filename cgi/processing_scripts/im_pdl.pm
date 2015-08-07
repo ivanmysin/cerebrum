@@ -278,10 +278,21 @@ sub save_param {
 	$sth->finish();
 	return $res;
 }
-########################################################################
-sub get_server_param {
-	my $node_id = shift;
+
+sub cut_end_qouts {
+	my $str = shift;
 	
+	if (substr($str, 0, 1) eq "\"" or substr($str, 0, 1) eq "'") {
+		$str = substr($str, 1);
+	};
+
+	if (substr($str, -1, 1) eq "\"" or substr($str, -1, 1) eq "'") {
+		$str = substr($str, 0, -1);
+	};
+	return $str;
 }
+########################################################################
+
+
 ########################################################################
 1;

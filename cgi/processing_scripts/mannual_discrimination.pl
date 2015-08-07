@@ -25,11 +25,7 @@ my $regime = $_getpost{'regime'};
 
 my $params = $_getpost{'processed_params'};
 
-my $server_params = substr ($_getpost{"server_json_params"}, 1, -1);
-$server_params = from_json($server_params);
-
-
-
+my $server_params = from_json($_getpost{"server_json_params"});
 my $fd = $server_params->{'fd'}; # $fd is discritisation frequency of wav data
 
 

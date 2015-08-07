@@ -1,26 +1,97 @@
 <script src="http://cerebrum.loc/js/underscore.js" type="text/javascript"> </script>
 <script src="http://cerebrum.loc/js/backbone.js" type="text/javascript"> </script>
 
+<div id="proccessing_code">
 
-<div class="svg_container" style="display:none; float:left;"> 
-	<svg class="outSvg" >
-		<svg class="innerSvg"> 
-
-		</svg> <!-- /svg.innerSvg -->
-	</svg> <!-- /svg.outSvg -->
-
-	<table class="boundTable"> 
-		<tr>
-			<th>Название эффекта</th>
-			<th>Нижняя граница эффекта</th>
-			<th>Верхняя граница эффекта</th>
-			<th>Редактировать название</th>
-			<th>Удалить</th>
-		</tr>
-	</table>
-</div>
-
-<div class="template" style="display:none">
-	<button></button>
 
 </div>
+
+<!-- Templates -->
+<div id="template_for_one_neuron" class="template_html">
+	<div class="one_neuron">
+		<div class="svg_container">
+
+		</div> <!--/.svg_container -->
+		<div class="div_bounds_table">
+			<form class="add_bounds form">
+				Название эффекта <input type="text" size="25" value="Не названный эффект" name="effect_name"> 
+				</br>
+				Нижняя граница (сек.) <input type="text" size="2" name="lowbound"> 
+				</br>
+				Верхняя граница (сек.) <input type="text" size="2" name="upperbound">
+				</br>
+				<button class="buttonForm btn-icon btn-grey btn-plus"> Добавить эффект </button>
+			</form>
+			<table class="boundTable"> 
+				<tr>
+					<th> Текущий эффект </th>
+					<th> Название эффекта </th>
+					<th> Нижняя граница </th>
+					<th> Верхняя граница </th>
+					<th> Ред. название </th>
+					<th> Удалить </th>
+				</tr>
+			</table>
+		</div>
+		<div class="clear"></div>
+	</div> <!--/.one_neuron -->
+</div>
+
+<div id="templateZoomY" class="template_html">
+	<div class="zoomingY">								
+		<div class="inputFrame">			
+			<button class="downY btn btn-grey"> &uarr; </button>			
+			<button class="upY btn btn-grey"> &darr; </button> </br>
+			Шаг <input size="3" class="stepY" value="0.2" type="text"> 								
+			</div>
+			</br>
+			<div class="inputFrame">			
+				<button class="downScaleY btn btn-grey"> - </button>			
+				<button class="upScaleY btn btn-grey"> + </button>
+				</br>			
+				Коэффициент <input size="3" class="scalingCoefY" value="1.2" type="text">
+			</div>
+			</br>
+
+			<div class="inputFrame">
+				Минимум Y <input size="3" class="minYvalue" value="-0.2" type="text">
+				</br>
+				Максимум Y <input size="3" class="maxYvalue" value="1.2" type="text">
+				</br>
+				<button class="reZoomingByUserY btn btn-grey"> Перестроить </button>
+			</div>
+	<!-- /.zoomingY -->
+	</div>
+</div> 
+
+<div id="templateZoomX" class="template_html">
+	<div class="zoomingX">
+		<div class="inputFrame">
+			<button class="toStart btn btn-grey"> &larr; </button>
+			<button class="toEnd btn btn-grey"> &rarr; </button>
+			Шаг (сек.) <input size="3" class="stepNavigation" value="1" type="text">	
+		</div>
+		<div class="inputFrame">
+			<button class="downScale btn btn-grey"> - </button>
+			<button class="upScale btn btn-grey"> + </button>
+			Коэффициент изменения масштаба <input size="3" class="scalingCoef" value="1.2" type="text">
+		</div>
+		</br>
+		<div class="inputFrame">
+			Начало (сек.) <input size="3" class="startTimeWindow" value="0" type="text">
+			Конец (сек.) <input size="3" class="endTimeWindow" value="0.5" type="text">
+			<button class="rePlotByUserScale btn btn-grey"> Перестроить </button>
+		</div>
+
+	<!-- /.zoomingX -->
+	</div>
+</div>
+
+<script type="text/template" id="bound_template">
+	<td> <input type="radio" name="current_effect"> </td>
+	<td> <%= name %> </td>
+	<td> <%= lowbound %> </td>
+	<td> <%= upperbound %> </td>
+	<td> <button class="edit_effect btn btn-green"> Ред. </button> </td> 
+	<td> <button class="delete_effect btn btn-red"> X </button> </td>
+</script>
