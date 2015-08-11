@@ -88,7 +88,14 @@
 </div>
 
 <script type="text/template" id="bound_template">
-	<td> <input type="radio" name="current_effect"> </td>
+	<td>
+		<input type="radio" name="current_effect" value="<%=my_id%>"  
+		<% if (current) { %> 
+			<% print ('checked'); %>
+		<% } %>
+		/>
+	</td>
+	
 	<td> <%= name %> </td>
 	<td> <%= lowbound %> </td>
 	<td> <%= upperbound %> </td>

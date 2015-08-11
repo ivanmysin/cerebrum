@@ -24,7 +24,6 @@ my $regime = $_getpost{'regime'};
 
 
 my $server_params = &cut_end_qouts($_getpost{"server_json_params"});
-
 $server_params = from_json($server_params);
 
 my $data = matlab_read($sources_file);

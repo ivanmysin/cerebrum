@@ -33,7 +33,7 @@ my $data = matlab_read($sources_file);
 my $nchs = $data->ndims();   # $nchs is number chanels in wav file
 
 my $parent_node_id = int($_getpost{'parent_processing_node_id'});  
-my $server_processing_param = &get_server_param($parent_node_id);
+
 
 switch ($regime) {
 	case("read") {

@@ -38,6 +38,7 @@ App.Funcs = {
 			success: App.Funcs.make_plots,
 		});
 	},
+
 	in_arr: function (val, arr) {
 		for (var i=0; i<arr.length-1; i++) {
 			if (val == arr[i]) {
@@ -46,6 +47,28 @@ App.Funcs = {
 		};
 		return false;
 	},
+
+	getRandomColor: function () {
+    	/*var letters = '0123456789ABCDEF'.split('');
+    	var color = '#';
+    	for (var i = 0; i < 6; i++ ) {
+        	color += letters[Math.floor(Math.random() * 16)];
+    	}
+    	return color;
+    	*/
+    	var r = Math.floor(Math.random() * 255);
+    	var g = Math.floor(Math.random() * 255);
+    	var b = Math.floor(Math.random() * 255);
+    	var color = "rgb(" + r + ", " + g + ", " + b + ")";
+    	return color;
+	}, 
+
+	roundPlus: function (x, n) { //x - число, n - количество знаков
+	  if(isNaN(x) || isNaN(n)) return false;
+	  var m = Math.pow(10,n);
+	  return Math.round(x*m)/m;
+	},
+
 	make_plots: function (recevedData) {
 
 		var template =  $("#procc_container #template_for_one_neuron");
@@ -83,6 +106,43 @@ App.Funcs = {
 				
 				var svg_contaner = $(inserted_el).find(".svg_container");
 
+				var bnd = new App.Collections.BoundsCol ([                                   // create collection of bounds
+					{
+						name: "Effect 1",
+						lowbound: 1,
+						upperbound:2,
+						color: App.Funcs.getRandomColor(),
+					},
+					{
+						name: "Effect 2",
+						lowbound: 12,
+						upperbound:23,
+						color: App.Funcs.getRandomColor(),
+					},
+					{
+						name: "Effect 3",
+						lowbound: 5,
+						upperbound:6,
+						color: App.Funcs.getRandomColor(),
+					},
+
+
+				]);                                 
+				
+				var bnd_view = new App.Views.Bounds ({                                        // create view of collection bnd
+					collection: bnd,
+					el: $(inserted_el).find("table.boundTable"),
+				});                     
+
+
+				var add_new_bnd = new App.Views.AddBound({                                    // view of addition bounds
+					collection:bnd,
+					el: $(inserted_el).find("form.add_bounds"),
+				});    
+
+
+
+
 				if (typeof (ch_data[j].rate_by_bins) !== 'undefined' ) {
 					var plot_by_bins = new App.Models.RatePlot (ch_data[j].rate_by_bins);   // Создаем модель интегралки по бинам
 					plot_by_bins.set("channel_ind", i);
@@ -94,6 +154,7 @@ App.Funcs = {
 					var plot_by_bins_view = new App.Views.RatePlot({                        // Создаем вид этой модели
 						model: plot_by_bins,
 						el: $(new_el),
+						effects_collection: bnd,
 					}); 
 
 					neuron_struct.plot_by_bins_view = plot_by_bins_view;                    // Добавляем этот вид в набор данных о нейроне 
@@ -109,47 +170,16 @@ App.Funcs = {
 					
 					$(svg_contaner).append("<div class=\"one_plot\"></div>");
 					var new_el = $(svg_contaner).find(".one_plot:last");
-					 // Создаем вид этой модели
+					
+					// Создаем вид этой модели
 					var moment_plot_view = new App.Views.RatePlot({
 						model:moment_plot,
 						el: $(new_el),
+						effects_collection: bnd,
 					});    
 
 					neuron_struct.moment_plot_view = moment_plot_view;                       // Добавляем этот вид в набор данных о нейроне 
 				}
-
-				var bnd = new App.Collections.BoundsCol ([                                   // create collection of bounds
-					{
-						name: "Effect 1",
-						lowbound: 1,
-						upperbound:2,
-					},
-					{
-						name: "Effect 2",
-						lowbound: 12,
-						upperbound:23,
-					},
-					{
-						name: "Effect 3",
-						lowbound: 5,
-						upperbound:6,
-					},
-
-
-				]);                                 
-				
-				var bnd_view = new App.Views.Bounds ({                                        // create view of collection bnd
-					collection: bnd,
-					el: $(inserted_el).find("table.boundTable"),
-				});                     
-
-
-				var add_new_bnd = new App.Views.AddBound({                                    // view of addition bounds
-					collection:bnd,
-					el: $(inserted_el).find("form.add_bounds"),
-				});                   
-
-
 
 
 				// var plot_view_bounds = new App.Views.BoundsPlot({collection:bnd});         // plot view of collection
@@ -214,10 +244,13 @@ App.Views.RatePlot = Backbone.View.extend({
 	},
 
 
-	initialize: function() {
+	initialize: function(options) {
+		this.effects_collection = options.effects_collection;
 		
 		this.render();
 		this.model.on('change', this.renderPlot, this);
+		this.effects_collection.on('change', this.renderBounds, this);
+
 
 		this.svg_el = this.$el.find("div.svg_wrapper");
 		this.minYvalue = this.$el.find(".minYvalue");
@@ -230,6 +263,22 @@ App.Views.RatePlot = Backbone.View.extend({
 		this.scalingCoefY = this.$el.find(".scalingCoefY");
 	},
 
+	renderBounds: function(eventObj) {
+
+		var $model_rects = this.$el.find("." + eventObj.cid);
+		var lowbound = parseFloat( eventObj.get("lowbound") );
+		var upperbound = parseFloat( eventObj.get("upperbound") );
+
+		var minX = parseFloat( this.model.get("minX") );
+		var maxX = parseFloat( this.model.get("maxX") );
+		var width = App.globalPlotProperties.width;
+
+		var lowboundSvg = this.plot_to_svg_x(lowbound, width, minX, maxX);
+		var upperboundSvg = this.plot_to_svg_x(upperbound, width, minX, maxX);
+		$model_rects.attr("x", lowboundSvg);
+		$model_rects.attr("width", (upperboundSvg - lowboundSvg) );
+	},
+
 	render: function() {
 		var svg_code = this.getSVGplot();
 		var template_zoomY = $("#templateZoomY").html();
@@ -239,7 +288,6 @@ App.Views.RatePlot = Backbone.View.extend({
 	},
 
 	renderPlot: function() {
-		console.log(" Hello from renderPlot! ");
 		var new_svg_code = this.getSVGplot();
 		this.svg_el.html(new_svg_code);
 		return this;
@@ -325,7 +373,7 @@ App.Views.RatePlot = Backbone.View.extend({
 
 	rePlotY: function(eventObj) {
 		
-		var step = parseFloat ( this.navigationY.val() );
+		var step = parseFloat( this.navigationY.val() );
 		var direction = eventObj.currentTarget.classList;	
 		
 		var minY = parseFloat( this.model.get("minY") );
@@ -390,8 +438,8 @@ App.Views.RatePlot = Backbone.View.extend({
 	},
 
 	reZoomingByUserY: function(eventObj) {
-		var startWindow = parseFloat ( this.minYvalue.val() ); 
-		var endWindow = parseFloat ( this.maxYvalue.val() ); 
+		var startWindow = parseFloat( this.minYvalue.val() ); 
+		var endWindow = parseFloat( this.maxYvalue.val() ); 
 		if ((endWindow - startWindow) < 0) {
 			return;
 		};
@@ -402,7 +450,28 @@ App.Views.RatePlot = Backbone.View.extend({
 		return this;
 	},
 	change_bound: function(eventObj) {
-		console.log(eventObj);
+		
+		var shiftX = App.globalPlotProperties.shiftX;
+		var width = App.globalPlotProperties.width;
+		var minX = parseFloat( this.model.get("minX") );
+		var maxX = parseFloat( this.model.get("maxX") );
+
+
+		var xClick = eventObj.pageX - $(eventObj.currentTarget).offset().left - shiftX; // 
+	    var yClick = eventObj.pageY - $(eventObj.currentTarget).offset().top - App.globalPlotProperties.shiftY;  //
+		
+		var plotX = this.svg_to_plot_x(xClick, width, minX, maxX);
+
+		this.effects_collection.each(function(effect) {
+			
+			if ( effect.get("current") ) {
+			
+				effect.set( {"lowbound": plotX, } );
+			
+			};
+			
+		}, this);
+
 
 	},
 
@@ -441,6 +510,20 @@ App.Views.RatePlot = Backbone.View.extend({
 				points += svgx[i] + ", " + svgy[i] + " ";
 			}
 		}
+		//
+		var bounds_effects = "";
+		
+		this.effects_collection.each(function(effect) {
+			
+			var lowboundSvg = this.plot_to_svg_x( parseFloat( effect.get( "lowbound") ), width, minX, maxX );
+			var upperboundSvg = this.plot_to_svg_x( parseFloat( effect.get("upperbound") ), width, minX, maxX );
+
+			bounds_effects += '<rect x="' + lowboundSvg + '" y="' + 0 + '" width="' + (upperboundSvg - lowboundSvg) + '" height="' + height + '" fill="' + effect.get("color");
+			bounds_effects += '"  style="fill-opacity: ' + effect.get("opacity") + '" stroke="#000" stroke-width="3" class="' + effect.cid + '""></rect>';
+				
+		}, this);
+
+				
 
 		// declare vars for grids on plot
 		var gridX = "<path d=\"";
@@ -482,6 +565,7 @@ App.Views.RatePlot = Backbone.View.extend({
 		svg += "<rect x=0 y=0 width=" + width + " height=" + height + " class=\"frame\" /> \n";
 		svg += "<polyline points=\"" + points + "\" class=\"linePlot\" /> \n ";
 		svg += gridX + gridY;
+		svg += bounds_effects;
 		svg += "</svg>\n";
 
 		// add labels
@@ -541,11 +625,7 @@ App.Views.RatePlot = Backbone.View.extend({
 		return y;
 	},
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	roundPlus: function (x, n) { //x - число, n - количество знаков
-	  if(isNaN(x) || isNaN(n)) return false;
-	  var m = Math.pow(10,n);
-	  return Math.round(x*m)/m;
-	},
+
 	downSampling: function (ySequence, xSequence) {
 		var newSequence = new Array ();
 		var newSequenceX = new Array ();
@@ -567,9 +647,6 @@ App.Views.RatePlot = Backbone.View.extend({
 		return (result);
 	},
 
-	/* Тут нужно вставить другие функции работы с графиками (масштабирование и т.д.) */
-
-
 
 }); 
 
@@ -582,6 +659,10 @@ App.Models.Bounds = Backbone.Model.extend({
 		name: 'Unnamed effect',
 		lowbound: 0,
 		upperbound: 1,
+		color: "rgd(255, 255, 255)",
+		opacity: 0.2,
+		current: false,
+		my_id: "0",
 	},
 			
 	validate: function(attrs) {
@@ -606,23 +687,47 @@ App.Views.Bound = Backbone.View.extend({
 	id_template: "#bound_template",	
 	
 	initialize: function() {
+		this.model.set("my_id", this.model.cid);
+	
 		this.model.on('change', this.render, this); 
 		this.model.on('destroy', this.deleteBoundFromView, this);
 
 		this.template = _.template( $("#bound_template").html() );
+
 	},
 
 	
 	render: function() {
 		
+		var color = this.model.get("color");
+		var opacity = this.model.get("opacity");
+		color = color.substring(0,  color.length-1) + ", " + opacity + ")";
+		this.$el.css("background-color", color); 
+		
+		var lowbound = App.Funcs.roundPlus( parseFloat( this.model.get("lowbound") ), 1 );
+		var upperbound = App.Funcs.roundPlus( parseFloat( this.model.get("upperbound") ), 1 );
+
+		this.model.set({
+			"lowbound": lowbound,
+			"upperbound": upperbound,
+		}, {silent: true} );
+
 		this.$el.html( this.template( this.model.toJSON() ) );
+
+		// var radio = this.$el.find("input[type=\"radio\"]");
+
+		// console.log( this.model.toJSON() );
+		
+		// if ( this.model.get("current") ) {
+			// $(radio).prop( "checked", true );
+		// }
+
 		return this;
 	},
 
 	events: {
 		'click .edit_effect': 'editName',
 		'click .delete_effect': 'destroy',
-
 	},
 
 	editName: function() {
@@ -637,6 +742,7 @@ App.Views.Bound = Backbone.View.extend({
 	deleteBoundFromView: function() {
 		this.$el.remove();
 	},
+
 });
 
 ////////////////////////////////////////////////////////////////////
@@ -648,7 +754,11 @@ App.Collections.BoundsCol = Backbone.Collection.extend({
 // declar view of collection of models of bounds
 App.Views.Bounds = Backbone.View.extend({
 	tagName: 'tbody', 
-		
+
+	events: {
+		'change input[type=radio]': 'change_current_effect',
+	},
+
 	initialize: function() {
 		this.render();
 		this.collection.on('add', this.addOne, this);
@@ -660,11 +770,26 @@ App.Views.Bounds = Backbone.View.extend({
 	 	return this;
 	},
 	addOne: function(model_one_eleemnt) {
-	 // создаем новый дочерний вид
+	// создаем новый дочерний вид
 	    var view_one_element = new App.Views.Bound({ model: model_one_eleemnt });
 	// добавляем его в корневой элемент
     	this.$el.append(view_one_element.render().el);
 	},
+
+	change_current_effect: function(eventObj) {
+		var effect_id = $(eventObj.currentTarget).val();
+		this.collection.each(function(model) {
+			
+			if (model.cid == effect_id) {
+				model.set( { current: true, }, {silent: true} );
+			} else {
+				model.set( { current: false, }, {silent: true} );
+			}
+
+		}, this); 
+		return this;
+	},
+
 });
 
 // View of addition of new bounds in collection
