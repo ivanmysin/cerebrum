@@ -22,6 +22,7 @@
 				</br>
 				<button class="buttonForm btn-icon btn-grey btn-plus"> Добавить эффект </button>
 			</form>
+			
 			<table class="boundTable"> 
 				<tr>
 					<th> Текущий эффект </th>
@@ -89,7 +90,7 @@
 
 <script type="text/template" id="bound_template">
 	<td>
-		<input type="radio" name="current_effect" value="<%=my_id%>"  
+		<input type="radio" name="current_effect_<%= neuron_number %>" value="<%=my_id%>"  
 		<% if (current) { %> 
 			<% print ('checked'); %>
 		<% } %>

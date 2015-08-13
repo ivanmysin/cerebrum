@@ -40,6 +40,7 @@ App.Funcs = {
 	},
 
 	in_arr: function (val, arr) {
+
 		for (var i=0; i<arr.length-1; i++) {
 			if (val == arr[i]) {
 				return true;
@@ -70,21 +71,20 @@ App.Funcs = {
 	},
 
 	make_plots: function (recevedData) {
-
+				
 		var template =  $("#procc_container #template_for_one_neuron");
 		var template_html = $(template).html();
 		var processing_code_div = $("#procc_container #proccessing_code");
 
-		//console.log(JSON.stringify(recevedData));
-
-		//var plotsCollections = new App.Collections.RatePlots([]);
-
 		var main_arr = new Array();     // Массив все данных о всех нейронах
 
-		var i=0; //for (var i=0; i<recevedData.length-1; i++) {    
+		var neuron_number = 1;
+
+		
+		for (var i=0; i<recevedData.length; i++) {    
 			// cycle for channels
 			var ch_data = recevedData[i].plots;
-			var j=0; //for (var j=0; j<ch_data.legth-1; j++) {
+			for (var j=0; j<ch_data.length; j++) {
 				// cycle for each neuron in channel
 				/* 
 
@@ -100,6 +100,7 @@ App.Funcs = {
 
 				*/ 
 
+
 				$(processing_code_div).append(template_html);             // Вставляем код шаблона для обработки нейрона
 				var inserted_el = $("#proccessing_code .one_neuron:last");
 				var neuron_struct = {};                                   // Структура, которая содержит все данные о нейроне на данном канале
@@ -112,18 +113,21 @@ App.Funcs = {
 						lowbound: 1,
 						upperbound:2,
 						color: App.Funcs.getRandomColor(),
+						neuron_number: neuron_number,
 					},
 					{
 						name: "Effect 2",
 						lowbound: 12,
 						upperbound:23,
 						color: App.Funcs.getRandomColor(),
+						neuron_number: neuron_number,
 					},
 					{
 						name: "Effect 3",
 						lowbound: 5,
 						upperbound:6,
 						color: App.Funcs.getRandomColor(),
+						neuron_number: neuron_number,
 					},
 
 
@@ -132,16 +136,15 @@ App.Funcs = {
 				var bnd_view = new App.Views.Bounds ({                                        // create view of collection bnd
 					collection: bnd,
 					el: $(inserted_el).find("table.boundTable"),
+					neuron_number: neuron_number,
 				});                     
 
 
 				var add_new_bnd = new App.Views.AddBound({                                    // view of addition bounds
 					collection:bnd,
 					el: $(inserted_el).find("form.add_bounds"),
+					neuron_number: neuron_number,
 				});    
-
-
-
 
 				if (typeof (ch_data[j].rate_by_bins) !== 'undefined' ) {
 					var plot_by_bins = new App.Models.RatePlot (ch_data[j].rate_by_bins);   // Создаем модель интегралки по бинам
@@ -181,15 +184,16 @@ App.Funcs = {
 					neuron_struct.moment_plot_view = moment_plot_view;                       // Добавляем этот вид в набор данных о нейроне 
 				}
 
-
-				// var plot_view_bounds = new App.Views.BoundsPlot({collection:bnd});         // plot view of collection
-
-//				neuron_struct.bnd = bnd;
-//				neuron_struct.bnd_view = bnd_view;
-//				neuron_struct.add_new_bnd= add_new_bnd;
+				neuron_struct.bnd = bnd;
+				neuron_struct.bnd_view = bnd_view;
+				neuron_struct.add_new_bnd= add_new_bnd;
+				
+				neuron_number++;
 				main_arr.push(neuron_struct);   // Добавляем данные о нейроне в общий массив
-			//}; 
-		//};
+			} 
+		}
+
+
 	},
 
 
@@ -239,18 +243,24 @@ App.Views.RatePlot = Backbone.View.extend({
 		"click .downScaleY": "reScaleY",
 		"click .upScaleY": "reScaleY",
 		"click .reZoomingByUserY": "reZoomingByUserY",
-		"click .outSVG": "change_bound",
+
+		"mousedown .outSVG": "set_drag_bound",
+		"mousemove .outSVG": "change_bound",
+		"mouseup .outSVG": "drop_bound",
+
        
 	},
 
 
 	initialize: function(options) {
 		this.effects_collection = options.effects_collection;
-		
+	
 		this.render();
+	
 		this.model.on('change', this.renderPlot, this);
-		this.effects_collection.on('change', this.renderBounds, this);
-
+		this.effects_collection.on('change:lowbound change:upperbound', this.renderBounds, this);
+		this.effects_collection.on('remove', this.removeEffeft, this);
+		this.effects_collection.on('add', this.addEffeft, this);
 
 		this.svg_el = this.$el.find("div.svg_wrapper");
 		this.minYvalue = this.$el.find(".minYvalue");
@@ -261,6 +271,140 @@ App.Views.RatePlot = Backbone.View.extend({
 		this.endX = this.$el.find(".endTimeWindow");
 		this.navigationY = this.$el.find(".stepY");
 		this.scalingCoefY = this.$el.find(".scalingCoefY");
+
+		this.dragable_bound = false;
+		this.side = undefined;
+
+
+	},
+	set_drag_bound: function (eventObj) {
+		
+		var shiftX = App.globalPlotProperties.shiftX;
+		var shiftY = App.globalPlotProperties.shiftY
+		var width = App.globalPlotProperties.width;
+		var height = App.globalPlotProperties.height;
+
+		var xClick = eventObj.pageX - $(eventObj.currentTarget).offset().left - shiftX;
+	    var yClick = eventObj.pageY - $(eventObj.currentTarget).offset().top - shiftY;  
+
+	    if ( xClick<0 || xClick>width || yClick<0 || yClick>height) {
+	    	return;
+	    };
+
+	    var minX = this.model.get("minX");
+		var maxX = this.model.get("maxX");
+		
+
+		this.effects_collection.each(function(effect) {
+			
+			if ( effect.get("current") ) {
+			
+				var lowboundSvg = this.plot_to_svg_x( parseFloat( effect.get( "lowbound" ) ), width, minX, maxX);
+				var upperboundSvg = this.plot_to_svg_x( parseFloat( effect.get( "upperbound" ) ), width, minX, maxX);
+
+				if ( Math.abs(xClick - lowboundSvg) < 6 ) { // 6px is area around current bound for dragable
+					this.side = "low";
+					this.dragable_bound = true;
+				}
+
+				if ( Math.abs(xClick - upperboundSvg) < 6 ) { // 6px is area around current bound for dragable
+					this.side = "upper";
+					this.dragable_bound = true;
+				}
+			
+			};
+			
+		}, this);
+		
+		return this;
+	},
+
+	drop_bound: function (eventObj) {
+		this.dragable_bound = false;
+		this.side = undefined;
+
+		return this;
+	},
+
+
+
+	change_bound: function(eventObj) {
+		if ( !(this.dragable_bound) ) { return; }
+		var shiftX = App.globalPlotProperties.shiftX;
+		var shiftY = App.globalPlotProperties.shiftY
+		var width = App.globalPlotProperties.width;
+		var height = App.globalPlotProperties.height;
+
+		var xClick = eventObj.pageX - $(eventObj.currentTarget).offset().left - shiftX; // 
+	    var yClick = eventObj.pageY - $(eventObj.currentTarget).offset().top - shiftY;  
+
+	    if ( xClick<0 || xClick>width || yClick<0 || yClick>height) {
+	    	this.dragable_bound = false;
+			this.side = undefined;
+	    	return;
+	    };
+		
+		var minX = parseFloat( this.model.get("minX") );
+		var maxX = parseFloat( this.model.get("maxX") );
+
+
+
+		var plotX = this.svg_to_plot_x(xClick, width, minX, maxX);
+
+		this.effects_collection.each(function(effect) {
+			
+			if ( effect.get("current") ) {
+			
+				if (this.side == "low") {
+					effect.set( {"lowbound": plotX, }, {validate: true} );
+				}
+
+				if (this.side == "upper") {
+					effect.set( {"upperbound": plotX, }, {validate: true} );
+				}
+			
+			};
+			
+		}, this);
+		
+		return this;
+	},
+
+	addEffeft: function(eventObj) {
+		
+		var $innerSvg = this.$el.find(".innerSvg");
+
+		var width  = App.globalPlotProperties.width;
+		var height = App.globalPlotProperties.height;
+		var minX = this.model.get("minX");
+		var maxX = this.model.get("maxX");
+
+		var lowboundSvg = this.plot_to_svg_x( parseFloat( eventObj.get( "lowbound") ), width, minX, maxX );
+		var upperboundSvg = this.plot_to_svg_x( parseFloat( eventObj.get("upperbound") ), width, minX, maxX );
+
+		
+
+		var new_bounds_on_plot = $(document.createElementNS("http://www.w3.org/2000/svg", "rect")).attr({
+            "x": lowboundSvg,
+            "y": 0,
+            "width": (upperboundSvg - lowboundSvg),
+            "height": height,
+            "stroke": "#000",
+            "stroke-width": "3" ,
+            "fill":  eventObj.get("color"),
+            "style": 'fill-opacity: ' + eventObj.get("opacity"),
+            "class": eventObj.cid,
+        });
+
+		$innerSvg.append(new_bounds_on_plot);
+
+		return this;
+	}, 
+
+	removeEffeft: function (eventObj) {
+		var bounds = this.$el.find("." + eventObj.cid);
+		$(bounds).remove();
+		return this;
 	},
 
 	renderBounds: function(eventObj) {
@@ -449,30 +593,38 @@ App.Views.RatePlot = Backbone.View.extend({
 		});
 		return this;
 	},
-	change_bound: function(eventObj) {
-		
-		var shiftX = App.globalPlotProperties.shiftX;
-		var width = App.globalPlotProperties.width;
-		var minX = parseFloat( this.model.get("minX") );
-		var maxX = parseFloat( this.model.get("maxX") );
 
 
-		var xClick = eventObj.pageX - $(eventObj.currentTarget).offset().left - shiftX; // 
-	    var yClick = eventObj.pageY - $(eventObj.currentTarget).offset().top - App.globalPlotProperties.shiftY;  //
-		
-		var plotX = this.svg_to_plot_x(xClick, width, minX, maxX);
+	renderBoundsonPlots: function(effect, width, minX, maxX, height) {
+			var lowbound = parseFloat( effect.get( "lowbound") );
+			var upperbound = parseFloat( effect.get("upperbound") );
 
-		this.effects_collection.each(function(effect) {
+			if ( lowbound > maxX ) {
+				return " ";
+			}
+
+			if ( upperbound < minX ) {
+				return " ";
+			}
 			
-			if ( effect.get("current") ) {
-			
-				effect.set( {"lowbound": plotX, } );
-			
-			};
-			
-		}, this);
+			if (lowbound < minX && upperbound < maxX) {
+				lowbound = minX;
+			}
+
+			if (lowbound > minX && upperbound > maxX) {
+				upperbound = maxX;
+			}
 
 
+
+			
+			var lowboundSvg = this.plot_to_svg_x(lowbound, width, minX, maxX );
+			var upperboundSvg = this.plot_to_svg_x(upperbound, width, minX, maxX );
+
+			var width_bounds = upperboundSvg - lowboundSvg;
+			var bounds_effects = '<rect x="' + lowboundSvg + '" y="' + 0 + '" width="' + width_bounds + '" height="' + height + '" fill="' + effect.get("color");
+			bounds_effects += '"  style="fill-opacity: ' + effect.get("opacity") + '" stroke="#000" stroke-width="3" class="' + effect.cid + '""></rect>';
+			return bounds_effects;
 	},
 
 	getSVGplot: function  () {
@@ -514,13 +666,7 @@ App.Views.RatePlot = Backbone.View.extend({
 		var bounds_effects = "";
 		
 		this.effects_collection.each(function(effect) {
-			
-			var lowboundSvg = this.plot_to_svg_x( parseFloat( effect.get( "lowbound") ), width, minX, maxX );
-			var upperboundSvg = this.plot_to_svg_x( parseFloat( effect.get("upperbound") ), width, minX, maxX );
-
-			bounds_effects += '<rect x="' + lowboundSvg + '" y="' + 0 + '" width="' + (upperboundSvg - lowboundSvg) + '" height="' + height + '" fill="' + effect.get("color");
-			bounds_effects += '"  style="fill-opacity: ' + effect.get("opacity") + '" stroke="#000" stroke-width="3" class="' + effect.cid + '""></rect>';
-				
+			bounds_effects += this.renderBoundsonPlots(effect, width, minX, maxX, height);
 		}, this);
 
 				
@@ -663,6 +809,7 @@ App.Models.Bounds = Backbone.Model.extend({
 		opacity: 0.2,
 		current: false,
 		my_id: "0",
+		neuron_number: 0,
 	},
 			
 	validate: function(attrs) {
@@ -711,6 +858,7 @@ App.Views.Bound = Backbone.View.extend({
 			"lowbound": lowbound,
 			"upperbound": upperbound,
 		}, {silent: true} );
+
 
 		this.$el.html( this.template( this.model.toJSON() ) );
 
@@ -796,8 +944,9 @@ App.Views.Bounds = Backbone.View.extend({
 App.Views.AddBound = Backbone.View.extend({
 //	el: '#addBound',
 	
-	initialize: function() {
+	initialize: function(options) {
 		//console.log('initialize view of collection!');
+		this.neuron_number = options.neuron_number;
 		this.$effect_name = this.$el.find("input[name=\"effect_name\"]");
 		this.$lowbound = this.$el.find("input[name=\"lowbound\"]");
 		this.$upperbound = this.$el.find("input[name=\"upperbound\"]");
@@ -808,14 +957,31 @@ App.Views.AddBound = Backbone.View.extend({
 	},
 		
 	addBound: function(eventObj) {
+		eventObj.preventDefault();
 		var name = this.$effect_name.val();
-		var lowbound = this.$lowbound.val();
-		var upperbound = this.$upperbound.val();
-	
-		var new_bound = new App.Models.Bounds({name: name, lowbound: lowbound, upperbound: upperbound}, {validate: true});
+		var lowbound = parseFloat( this.$lowbound.val() );
+		var upperbound = parseFloat( this.$upperbound.val() );
+		var color = App.Funcs.getRandomColor();
+		
+		if ( isNaN (lowbound) ) {
+			lowbound = Math.random() * 10;
+		}
+
+		if ( isNaN (upperbound) ) {
+			upperbound  = lowbound + Math.random() * 10;
+		}
+
+
+		var new_bound = new App.Models.Bounds({
+			"name": name,
+			"lowbound": lowbound,
+			"upperbound": upperbound,
+			"color": color,
+			"neuron_number": this.neuron_number,
+		}, {validate: true});
+		
 		this.collection.add(new_bound);
 		
-		eventObj.preventDefault();
 	},
 });
 // Вид для отрисовки границ на графике
