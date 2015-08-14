@@ -55,11 +55,15 @@ switch ($regime) {
 	case("processing") {
 		# Algorim of processing
 		my @send_vals = ();        # struct with processing result for sending to browser 
-
 		
+		my $result_data =  pdl(); # вектор для сохранения результатов в мат файл
+		my $data_header = [];   # заголовок к вектору data
 
 		while ( my ($i, $channel) = each (@{$server_params})) { # пробеграем циклом по всем каналам
 			my $ch_number = $i + 1;
+			
+
+			
 			if ($_getpost{"channel_${ch_number}"} eq "off") { # Если канал не отмечен, то просто пропускаем его
 				next;
 			};
@@ -70,9 +74,12 @@ switch ($regime) {
 
 
 			$send_vals[$i]->{'channel_name'} = $channel->{'channel_name'};             # Добавляем в отправляемую структуру
-			
 			$send_vals[$i]->{'plots'} = [];
 
+			# сохраняем результаты в вектор $result_data
+			# Сохраняем заголовок в виде хеша $data_header
+			${$data_header}[$i] -> {"channel_name"} = "channel_".$ch_number; 
+			${$data_header}[$i] -> {"spikes"} = []; 
 			
 			while ( my ($j, $sp_data ) = each (@{$channel->{'spikes'}}) ) { # пробегаем по всем нейронам, которые дискриминировали в данном канале
 				
@@ -144,22 +151,32 @@ switch ($regime) {
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'binGridX'} = 0.05 * max($moment_rate_x);
 					${$send_vals[$i]->{'plots'}}[$j]->{'momentary_rate'}->{'binGridY'} = 0.1 * max($moment_rate_y);
 					
-					
-					
-					
 				}
 				
-
 				
-			}
+				# сохраняем результаты в вектор $result_data
+				# Сохраняем заголовок в виде хеша $data_header
+				my $low_ind = nelem($result_data);
+				my $upper_ind = nelem($spikes) + $low_ind -1;
+				$result_data = $result_data -> append ($spikes);
+				${${$data_header}[$i] -> {"spikes"}}[$j] = 
+					{
+						"low_ind" => $low_ind,
+						"upper_ind" => $upper_ind,
+					};
 			
+			} # end cycle by neurons
 			
-			$ch_number++;
-		};
+		}; # end cycle by channels
 		
 
 		my $json = JSON->new->utf8->encode(\@send_vals);
 		print $json;
+		
+		matlab_write($target_file, $result_data);
+		my $processing_node_id = int($_getpost{'processing_node_id'});
+		&save_param($processing_node_id, $data_header);
+		
 		
 	}
 	

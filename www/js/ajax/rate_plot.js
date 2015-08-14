@@ -5,7 +5,6 @@ App.Views = {};
 App.Collections = {};
 App.Funcs = {};
 
-
 ////////////////////////////////////////////////////////////////////
 // declare functions
 App.Funcs = {
@@ -76,7 +75,7 @@ App.Funcs = {
 		var template_html = $(template).html();
 		var processing_code_div = $("#procc_container #proccessing_code");
 
-		var main_arr = new Array();     // Массив все данных о всех нейронах
+		App.params.channels = new Array(); // Add to models to send to server
 
 		var neuron_number = 1;
 
@@ -84,6 +83,10 @@ App.Funcs = {
 		for (var i=0; i<recevedData.length; i++) {    
 			// cycle for channels
 			var ch_data = recevedData[i].plots;
+			
+			App.params.channels[i] = new Array ();
+
+
 			for (var j=0; j<ch_data.length; j++) {
 				// cycle for each neuron in channel
 				/* 
@@ -103,7 +106,7 @@ App.Funcs = {
 
 				$(processing_code_div).append(template_html);             // Вставляем код шаблона для обработки нейрона
 				var inserted_el = $("#proccessing_code .one_neuron:last");
-				var neuron_struct = {};                                   // Структура, которая содержит все данные о нейроне на данном канале
+				// var neuron_struct = {};                                   // Структура, которая содержит все данные о нейроне на данном канале
 				
 				var svg_contaner = $(inserted_el).find(".svg_container");
 
@@ -150,7 +153,7 @@ App.Funcs = {
 					var plot_by_bins = new App.Models.RatePlot (ch_data[j].rate_by_bins);   // Создаем модель интегралки по бинам
 					plot_by_bins.set("channel_ind", i);
 					plot_by_bins.set("neuron_ind", j);
-					neuron_struct.plot_by_bins = plot_by_bins;                              // Добавляем эту модель в набор данных о нейроне 
+					
         
         			$(svg_contaner).append("<div class=\"one_plot\"></div>");
 					var new_el = $(inserted_el).find(".one_plot:last");
@@ -158,18 +161,14 @@ App.Funcs = {
 						model: plot_by_bins,
 						el: $(new_el),
 						effects_collection: bnd,
-					}); 
-
-					neuron_struct.plot_by_bins_view = plot_by_bins_view;                    // Добавляем этот вид в набор данных о нейроне 
-					
+					}); 					
 				}
 				
 				if (typeof (ch_data[j].momentary_rate) !== 'undefined' ) {
 					var moment_plot = new App.Models.RatePlot (ch_data[j].momentary_rate);   // Создаем модель интегралки мгновенной скорости
 					moment_plot.set("channel_ind", i);
 					moment_plot.set("neuron_ind", j);
-					neuron_struct.moment_plot = moment_plot;                                 // Добавляем эту модель в набор данных о нейроне 
-					
+										
 					
 					$(svg_contaner).append("<div class=\"one_plot\"></div>");
 					var new_el = $(svg_contaner).find(".one_plot:last");
@@ -180,16 +179,12 @@ App.Funcs = {
 						el: $(new_el),
 						effects_collection: bnd,
 					});    
-
-					neuron_struct.moment_plot_view = moment_plot_view;                       // Добавляем этот вид в набор данных о нейроне 
 				}
 
-				neuron_struct.bnd = bnd;
-				neuron_struct.bnd_view = bnd_view;
-				neuron_struct.add_new_bnd= add_new_bnd;
-				
+
+				App.params.channels[i][j] = bnd;
 				neuron_number++;
-				main_arr.push(neuron_struct);   // Добавляем данные о нейроне в общий массив
+			
 			} 
 		}
 
@@ -942,7 +937,6 @@ App.Views.Bounds = Backbone.View.extend({
 
 // View of addition of new bounds in collection
 App.Views.AddBound = Backbone.View.extend({
-//	el: '#addBound',
 	
 	initialize: function(options) {
 		//console.log('initialize view of collection!');
@@ -982,24 +976,6 @@ App.Views.AddBound = Backbone.View.extend({
 		
 		this.collection.add(new_bound);
 		
-	},
-});
-// Вид для отрисовки границ на графике
-App.Views.BoundsPlot = Backbone.View.extend({
-	//el: $("#outSvg"),
-	initialize: function() {
-		//console.log('initialize plot view of collection!');
-		//this.collection.on('add', this.addOne, this);
-	},
-	events: {
-		'click': 'getNewBoundsVals',
-	},
-	getNewBoundsVals: function (eventObj) {
-		var x_svg = eventObj.offsetX;
-		this.collection.at(0).set("upperbound", x_svg);
-		console.log(x_svg);
-		// alert ("Клик по внешнему SVG!");
-			
 	},
 });
 

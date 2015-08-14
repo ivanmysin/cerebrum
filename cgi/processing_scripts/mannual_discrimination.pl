@@ -84,7 +84,7 @@ switch ($regime) {
 		
 		
 		for (my $i=0; $i<$nchs; $i++) {              # в этом цикле пробегаемся по всем каналам
-			my $ch = $data(:, $i);                     # в этой переменной храним отсчеты i-го канала
+			 my $ch = $data(:, $i);                     # в этой переменной храним отсчеты i-го канала
 			(my $lmax_ind, my $lmin_ind) = &extremums($ch); # $lmax_ind and $lmin_ind are indexes of local maximums and nimimums in $ch
 		
 			# Дискриминируем стимуляции
@@ -240,7 +240,7 @@ switch ($regime) {
 		my $processing_node_id = int($_getpost{'processing_node_id'});
 		&save_param($processing_node_id, $data_header);
 		
-		print qq(\n ######################### success ########################### \n\n\n\n);
+		print "success";
 
 	}
 	

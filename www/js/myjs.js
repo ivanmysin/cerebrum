@@ -42,6 +42,7 @@ $(document).ready(function(){
 		$(this).prepend(proc_html_input);
 		var processedParams = JSON.stringify(App.params); // App.params - стуктура, которая хранит параметры, полученные от пользователя и предназначеные для отправления 
 	                                                      //  на сервер как параметы  для запуска следующего скрипта
+	                                                      
 		var processedParamsHtmlCode =  "<textarea name=\"processed_params\" style=\"display:none;\"> " + processedParams + "</textarea>";
 		$(this).prepend(processedParamsHtmlCode);
 		
