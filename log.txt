@@ -1,1 +1,0 @@
-UPDATE processing_nodes SET server_json_params='{"nchs":2,"fd":44100}' WHERE id=763

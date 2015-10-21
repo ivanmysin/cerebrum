@@ -265,32 +265,7 @@ for (my $i=1; $i<nelem($t); $i++) {
 return @sers;
 }
 ########################################################################
-# Функция сохраняет параметры, обрабатывающиеся на стороне сервера
-sub save_param {
-	my $node_id = shift;
-	my $param_ref = shift;
-	
-	my $param = (JSON->new->utf8->encode($param_ref));
-	my $query = "UPDATE processing_nodes SET server_json_params='$param' WHERE id=$node_id";
-	
-	my $sth = $dbh->prepare($query);
-	my $res = $sth->execute();
-	$sth->finish();
-	return $res;
-}
 
-sub cut_end_qouts {
-	my $str = shift;
-	
-	if (substr($str, 0, 1) eq "\"" or substr($str, 0, 1) eq "'") {
-		$str = substr($str, 1);
-	};
-
-	if (substr($str, -1, 1) eq "\"" or substr($str, -1, 1) eq "'") {
-		$str = substr($str, 0, -1);
-	};
-	return $str;
-}
 ########################################################################
 
 

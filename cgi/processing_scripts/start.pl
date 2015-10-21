@@ -1,23 +1,24 @@
 #!/usr/bin/perl -w
+print "Content-Type: text/html charset=utf-8\n\n";
+
 use warnings;
 use strict;
 use JSON;
 use PDL;
 use PDL::NiceSlice;
 use PDL::Audio;
-use index_lib; 
 use PDL::IO::Matlab;
 use Switch;
-use im_pdl;
-use index_lib ("../");
 
+use im_pdl;
+use index_lib; 
+use model;
 
 &use_cgi();
 &set_config();
-
-&use_cgi();
 our %_getpost;
-print "Content-Type: text/html charset=utf-8\n\n";
+
+
 
 my $regime = $_getpost{'regime'};
 
@@ -32,12 +33,9 @@ my $data =  matlab_read($sources_file);
 
 my $server_params = from_json($_getpost{"server_json_params"});
 
-
-
 my $fd = $server_params->{'fd'}; # $fd is discritisation frequency of wav data
 my $nchs = $data->ndims();  # $nchs is number chanels in wav file
 $data = double($data); 
-
 
 switch ($regime) {
 	case("read") {
@@ -71,6 +69,8 @@ switch ($regime) {
 		my $json = JSON->new->utf8->encode(\@send_array);
 		print $json;
 	}
+	
+	
 	case("write") {
 		
 		for (my $i=0; $i<$nchs; $i++) {
@@ -83,13 +83,20 @@ switch ($regime) {
 		matlab_write($target_file, $data);
 		
 		my $processing_node_id = int($_getpost{'processing_node_id'});
-		&save_param($processing_node_id, $server_params);
+		my $statistics = &get_statistics($server_params);
+		&save_param($processing_node_id, $server_params, $statistics);
 		print "success";
-		
-		
-		
+
 	}
 	
+	case ("save") {
+		my $processing_node_id = int($_getpost{'processing_node_id'});
+		my $statistics = &get_statistics($server_params);
+		&save_param($processing_node_id, $server_params, $statistics);
+		print "success";
+		
+	}
+
 	else {
 		my $error = "Not valid regime";
 		print $error;
@@ -97,6 +104,31 @@ switch ($regime) {
 	}
 }
 
-
+sub get_statistics {
+	my $server_params = shift;
+	my $stat = qq(
+	<style>
+	table.start_statistics_table, table.start_statistics_table th,  table.start_statistics_table tr, table.start_statistics_table td {
+		border: 1px solid black; 
+		border-collapse: collapse;
+		text-align: center;
+		padding: 3px;
+	}
+	</style>
+	<table class="start_statistics_table">
+	
+		<tr>
+			<th> Частота дискретизации, Гц </th>
+			<th> Количество каналов </th>
+		</tr>
+		<tr>
+			<td> $server_params->{"fd"} </td>
+			<td> $server_params->{"nchs"} </td>
+		</tr>
+	
+	</table>
+	);
+	return $stat;
+}
 
 

@@ -46,14 +46,56 @@ App.Funcs = {
 
 	make_plots: function (recevedData) {
 
-    	console.log(" Hello from makes plot ");
 
-    	$("#procc_container").append('<a href="#get_params"> Назад </a>');
-	
-		//var template =  $("#procc_container #template_for_one_neuron");
-		//var template_html = $(template).html();
-		//var processing_code_div = $("#procc_container #proccessing_code");
+    	var plots_div = $("#procc_container #proccessing_code #plots"); // get div for all plots
+    	$(plots_div).html("");                                          // and clear its content
 
+		var template_html =  $("#procc_container #template_for_one_neuron").html(); // get template html
+		
+		for (var i=0; i<recevedData.length; i++) { // cicle by channels
+			var channel_data = recevedData[i];
+
+			$(plots_div).append('<div class="channels"> <span class="channel_name"> Канал ' + channel_data.channel_name + '</span> </div>');   // append new div for all neurons in one channels
+			var channels_div = $(plots_div).find(".channels:last"); // get inserted div
+
+			for (var j=0; j<channel_data.neurons.length; j++) {     // circle by neurons
+				
+				var neuron_data = channel_data.neurons[j];
+
+
+
+				$(channels_div).append('<div class="neuron"> <div class="general_zoming"></div> </div>');   // append new div for all effect in one neuron
+				var neuron_div = $(channels_div).find(".neuron:last");   // get inserted div
+				var general_zoming_div = $(neuron_div).find(".general_zoming");
+
+				var effects_collection = new App.Collections.HistPlots();
+
+				
+				for (var k=0; k<neuron_data.length; k++) {  // cycle by effects
+					var effect_data = neuron_data[k];
+
+					$(neuron_div).append('<div class="effect"> </div>');
+					var effect_div = $(neuron_div).find(".effect:last");
+
+					var hist_model = new App.Models.HistPlot(effect_data);
+					var hist_view = new App.Views.HistPlot({
+						model:hist_model,
+						el: $(effect_div),
+					});
+					effects_collection.add(hist_model);
+
+				};
+
+				var general_zoming_view = new App.Views.Zooming({
+					collection: effects_collection,
+					el: $(general_zoming_div),
+
+				});
+				
+				$(neuron_div).append('<div class="clear"> </div>');
+
+			};
+		};
 	},
 };
 
@@ -62,7 +104,7 @@ App.Funcs = {
 // declare model for plot data
 App.Models.HistPlot = Backbone.Model.extend({
 	defaults: {
-		plot_label: 'Plot',
+		effect_name: 'Some effect',
 		y_labels: 'Y vals',
 		x_labels: 'X vals',
 		x_vals: [],
@@ -81,28 +123,78 @@ App.Models.HistPlot = Backbone.Model.extend({
 });
 
 // Collection of plots models
-App.Collections.RatePlots = Backbone.Collection.extend({
+App.Collections.HistPlots = Backbone.Collection.extend({
 	model: App.Models.HistPlot,
 });
 
-// view of RatePlot model
+// view of zooming in same scalee
+
+App.Views.Zooming = Backbone.View.extend({
+
+	events: {
+		"click .rePlotAll": "rePlotAll",
+	},
+
+	initialize: function() {
+		this.render();
+
+
+		this.minYvalue = this.$el.find(".minYvalue");
+		this.maxYvalue = this.$el.find(".maxYvalue");
+
+		this.minXvalue = this.$el.find(".minXvalue");
+		this.maxXvalue = this.$el.find(".maxXvalue");
+
+	},
+
+	render: function() {
+		var template_html = $("#general_zoom_template").html();
+		this.$el.html(template_html);
+
+		return this;
+	},
+
+
+	rePlotAll: function(eventObj) {
+		var minX = parseFloat( $(this.minXvalue).val() );
+		var maxX = parseFloat( $(this.maxXvalue).val() );
+
+		var minY = parseFloat( $(this.minYvalue).val() );
+		var maxY = parseFloat( $(this.maxYvalue).val() );
+
+		this.collection.each(function(model) {
+			model.set({
+				minX: minX,
+				maxX: maxX,
+				minY: minY,
+				maxY: maxY,
+			});
+		});
+
+		return this;
+	},
+
+
+});
+
+// view of HistPlot model
 App.Views.HistPlot = Backbone.View.extend({
 
 	events: {
-		"click .toStart": "rePlot",
-		"click .toEnd": "rePlot",
-		"click .upScale": "reScale",
-		"click .downScale": "reScale",
-		"click .rePlotByUserScale": "rePlotByUserScale",
+		// "click .toStart": "rePlot",
+		// "click .toEnd": "rePlot",
+		// "click .upScale": "reScale",
+		// "click .downScale": "reScale",
 	
-		"click .upY": "rePlotY",
-		"click .downY": "rePlotY",
+		// "click .upY": "rePlotY",
+		// "click .downY": "rePlotY",
 	
-		"click .downScaleY": "reScaleY",
-		"click .upScaleY": "reScaleY",
-		"click .reZoomingByUserY": "reZoomingByUserY",
+		//"click .downScaleY": "reScaleY",
+		// "click .upScaleY": "reScaleY",
 
-       
+		"click .rePlotByUserScale": "rePlotByUserScale",
+		"click .reZoomingByUserY": "reZoomingByUserY",
+      
 	},
 
 
@@ -115,12 +207,12 @@ App.Views.HistPlot = Backbone.View.extend({
 		this.svg_el = this.$el.find("div.svg_wrapper");
 		this.minYvalue = this.$el.find(".minYvalue");
 		this.maxYvalue = this.$el.find(".maxYvalue");
-		this.navigationX = this.$el.find(".stepNavigation");
-		this.scalingCoef = this.$el.find(".scalingCoef");
+		//this.navigationX = this.$el.find(".stepNavigation");
+		//this.scalingCoef = this.$el.find(".scalingCoef");
 		this.startX = this.$el.find(".startTimeWindow");
 		this.endX = this.$el.find(".endTimeWindow");
-		this.navigationY = this.$el.find(".stepY");
-		this.scalingCoefY = this.$el.find(".scalingCoefY");
+		//this.navigationY = this.$el.find(".stepY");
+		//this.scalingCoefY = this.$el.find(".scalingCoefY");
 
 
 
@@ -131,7 +223,8 @@ App.Views.HistPlot = Backbone.View.extend({
 		var svg_code = this.getSVGplot();
 		var template_zoomY = $("#templateZoomY").html();
 		var template_zoomX = $("#templateZoomX").html();
-		this.$el.html(template_zoomY + "<div class=\"svg_wrapper\">" + svg_code + "</div>" + "<div class=\"clear\"></div>" + template_zoomX + "<div class=\"clear\"></div>");
+		var statCode = '<div class="statistics"> Kv = ' + this.model.get("kv") + '</div>'; // code for statistics by data on plot
+		this.$el.html(template_zoomY + "<div class=\"svg_wrapper\">" + svg_code + "</div>" + statCode + "<div class=\"clear\"></div>" + template_zoomX + "<div class=\"clear\"></div>");
 		return this;
 	},
 
@@ -370,7 +463,7 @@ App.Views.HistPlot = Backbone.View.extend({
 		
 		// form svg code
 		var svg = "<svg width=\"" + (width + 2*shiftX) + "px\" height=\"" + (height + 2*shiftY) + "px\" class=\"outSVG\"> \n";
-		svg += "<text x=" + (shiftX + (width + this.model.attributes.plot_label.length)/2) + " y=" + (shiftY - 30) + " class=\"plotTitle\" >" + this.model.attributes.plot_label + "</text> \n";
+		svg += "<text x=" + (shiftX + (width + this.model.get("effect_name").length)/4) + " y=" + (shiftY - 30) + " class=\"plotTitle\" >" + this.model.get("effect_name") + "</text> \n";
 		
 		// add inside svg
 		svg += "<svg x=\"" + shiftX + "px\" y=\"" + shiftY + "px\" width=\"" + width + "px\" height=\"" + height + "px\" viewBox=\"0 0 " + width + " " + height + "\"  class=\"innerSvg\" > \n";
@@ -380,8 +473,8 @@ App.Views.HistPlot = Backbone.View.extend({
 		svg += "</svg>\n";
 
 		// add labels
-		svg += "<text x=" + (shiftX + (width + this.model.attributes.x_labels.length)/2) + " y=" + (height + shiftY + 35) + "  class=\"Xtitle\" > " + this.model.attributes.x_labels + "</text> \n";
-		svg += "<text x=" + 2 + " y=" + (shiftY - 10) + " class=\"Ytitle\"> " + this.model.attributes.y_labels + " </text> \n"; //
+		svg += "<text x=" + (shiftX + (width + this.model.get("x_labels").length)/2) + " y=" + (height + shiftY + 35) + "  class=\"Xtitle\" > " + this.model.get("x_labels") + "</text> \n";
+		svg += "<text x=" + 2 + " y=" + (shiftY - 10) + " class=\"Ytitle\"> " + this.model.get("y_labels") + " </text> \n";
 		svg += labeleGridX;
 		svg += labeleGridY;
 		svg += "</svg>";
@@ -471,12 +564,13 @@ App.Routers.MyRout = Backbone.Router.extend({
     },
 
     get_params: function () {
-    	$("form#client_params").remove();
-    	$("#proccessing_code").fadeOut();
+    	
+    	$("#procc_container #proccessing_code").fadeOut();
+    	$("#procc_container #getparams").fadeIn();
     	
     	var data_for_ajax = {
 		'processing_node_id': App.processing_node_id,
-		'registrated_node_id':App.registrated_node_id,
+		'registrated_path_id':App.registrated_path_id,
 		'parent_processing_node_id':App.parent_processing_node_id,
 		'record_id': App.record_id,
 		'regime': 'read',
@@ -489,14 +583,14 @@ App.Routers.MyRout = Backbone.Router.extend({
 			cache: false,
 			dataType: "html",   
 			success: function(recevedData) {
-				$("#procc_container").append(recevedData);
-			
+				$("#procc_container #getparams").html(recevedData);
 			},
 
 			error: function (recevedData) {
 				alert ("Ajax query error! More details in console");
 				console.log(recevedData);
 			},
+
 		});
 
 
@@ -509,8 +603,8 @@ App.Routers.MyRout = Backbone.Router.extend({
     	var form = $("form#client_params");
 		var query_data = {
 			'processing_node_id': App.processing_node_id,
-			'registrated_node_id':App.registrated_node_id,
-			'parent_processing_node_id':App.parent_processing_node_id,
+			'registrated_path_id': App.registrated_path_id,
+			'parent_processing_node_id': App.parent_processing_node_id,
 			'record_id': App.record_id,
 			'regime': 'processing',
 		};
@@ -520,7 +614,7 @@ App.Routers.MyRout = Backbone.Router.extend({
 	
 		query += "&" + $.param(query_data);
 
-		var url =  App.server_script + "?"+ query;
+		var url = App.server_script + "?"+ query;
 		$.ajax ({
 			url: url,
 			type: 'GET',
@@ -532,9 +626,12 @@ App.Routers.MyRout = Backbone.Router.extend({
 				console.log(recevedData);
 			}
 		});
-	
-		$(form).remove();
-		$("#proccessing_code").fadeIn();
+		App.params.bin = $(form).find("input[name=bin]").val();
+		App.params.order = $(form).find("input[name=order]").val();
+
+
+		$("#procc_container #getparams").fadeOut();
+		$("#procc_container #proccessing_code").fadeIn();
     
     },
 });

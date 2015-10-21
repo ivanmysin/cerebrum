@@ -48,7 +48,7 @@ $(document).ready(function(){
 		
 		var data = {
 			'processing_node_id':  App.processing_node_id, 
-			'registrated_node_id': App.registrated_node_id, 
+			'registrated_path_id': App.registrated_path_id, 
 			'parent_processing_node_id':App.parent_processing_node_id, 
 			'regime': 'write',
 			'processed_params': processedParams,
@@ -73,9 +73,23 @@ $(document).ready(function(){
 					},
 		});
 		
+		// return false;
 
 	});
-	
-	
-	
+	/////////////////////////////////////////////////////////////////////////////////
+	$(".adduser").click(function(eventObj){
+		var input = $(this).siblings("input:last").clone().val("");
+		$(this).before("</br>").before(input);
+	});
+
+	$(".deleteuser").click(function(eventObj) {
+		var input = $(this).siblings("input");
+		var br = $(this).siblings("br:last");
+		if ($(input).length > 1) {
+			$(br).remove();
+			$(input).last().remove();
+		}
+	});
+
+	////////////////////////////////////////////////////////////////////////////////
 });

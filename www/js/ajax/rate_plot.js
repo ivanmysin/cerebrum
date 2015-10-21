@@ -21,7 +21,7 @@ App.Funcs = {
 	
 		var query_data = {
 			'processing_node_id': App.processing_node_id,
-			'registrated_node_id':App.registrated_node_id,
+			'registrated_path_id':App.registrated_path_id,
 			'parent_processing_node_id':App.parent_processing_node_id,
 			'record_id': App.record_id,
 			'regime': 'processing',
@@ -36,6 +36,19 @@ App.Funcs = {
 			dataType: "json",
 			success: App.Funcs.make_plots,
 		});
+
+		App.params.plots_params = App.Funcs.getFormData($(this));
+
+	},
+
+	getFormData: function ($form){
+	    var unindexed_array = $form.serializeArray();
+	    var indexed_array = {};
+	    $.map(unindexed_array, function(n, i){
+	        indexed_array[n['name']] = n['value'];
+	    });
+
+	    return indexed_array;
 	},
 
 	in_arr: function (val, arr) {
@@ -106,7 +119,7 @@ App.Funcs = {
 
 				$(processing_code_div).append(template_html);             // Вставляем код шаблона для обработки нейрона
 				var inserted_el = $("#proccessing_code .one_neuron:last");
-				// var neuron_struct = {};                                   // Структура, которая содержит все данные о нейроне на данном канале
+
 				
 				var svg_contaner = $(inserted_el).find(".svg_container");
 
@@ -992,7 +1005,7 @@ $(document).ready(function() {
 
 	var data_for_ajax = {
 		'processing_node_id': App.processing_node_id,
-		'registrated_node_id':App.registrated_node_id,
+		'registrated_path_id':App.registrated_path_id,
 		'parent_processing_node_id':App.parent_processing_node_id,
 		'record_id': App.record_id,
 		'regime': 'read',

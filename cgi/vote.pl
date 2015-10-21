@@ -1,10 +1,15 @@
 #!/usr/bin/perl -w
+use PDL;
+use PDL::NiceSlice;
+use utf8;
+use Encode qw(encode_utf8);
+#use JSON;
+use JSON::XS;
 
-my $html = "file=/home/mysites/template.html" ;#$res[0]->{'html_code'};
-	
-if (substr($html, 0, 5) eq "file=") {
-	my $file = substr($html, 5);
-	# $html = &read_file($file);
-	print $file;
-};
+print "Content-Type: text/html charset=utf-8\n\n";
 
+my $a = "abcd";
+
+$a = substr($a, 0, -2);
+
+print $a; 

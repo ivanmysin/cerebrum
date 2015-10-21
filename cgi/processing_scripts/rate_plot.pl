@@ -9,7 +9,8 @@ use index_lib;
 use PDL::IO::Matlab;
 use Switch;
 use im_pdl;
-use index_lib ("../");
+use index_lib;
+use model;
 
 
 &use_cgi();
@@ -25,9 +26,9 @@ my $regime = $_getpost{'regime'};
 
 my $server_params = &cut_end_qouts($_getpost{"server_json_params"});
 $server_params = from_json($server_params);
-
 my $data = matlab_read($sources_file);
 
+$regime = ($regime eq "save") ? "processing" : $regime;
 switch ($regime) {
 	case("read") {
 		# Send to client form for controles parameters of processing
@@ -49,37 +50,36 @@ switch ($regime) {
 	}
 	
 	case("write") {
-		print "success";
+		# Saving of processing
+    	print "success";
 	}
 	
 	case("processing") {
 		# Algorim of processing
 		my @send_vals = ();        # struct with processing result for sending to browser 
 		
-		my $result_data =  pdl(); # вектор для сохранения результатов в мат файл
+		my $result_data =  pdl([]); # вектор для сохранения результатов в мат файл
 		my $data_header = [];   # заголовок к вектору data
+		
 
 		while ( my ($i, $channel) = each (@{$server_params})) { # пробеграем циклом по всем каналам
 			my $ch_number = $i + 1;
-			
-
-			
+		
 			if ($_getpost{"channel_${ch_number}"} eq "off") { # Если канал не отмечен, то просто пропускаем его
 				next;
 			};
+			
 			my $l_ind = $channel->{'stim'}->{'low_ind'};
 			my $u_ind = $channel->{'stim'}->{'upper_ind'};
 			my $stims = $data($l_ind:$u_ind)->sever; # получили стимуляции в переменную
-			
-
 
 			$send_vals[$i]->{'channel_name'} = $channel->{'channel_name'};             # Добавляем в отправляемую структуру
 			$send_vals[$i]->{'plots'} = [];
 
 			# сохраняем результаты в вектор $result_data
 			# Сохраняем заголовок в виде хеша $data_header
-			${$data_header}[$i] -> {"channel_name"} = "channel_".$ch_number; 
-			${$data_header}[$i] -> {"spikes"} = []; 
+			$data_header->[$i] -> {"channel_name"} = "channel_".$ch_number; 
+			$data_header->[$i] -> {"spikes"} = []; 
 			
 			while ( my ($j, $sp_data ) = each (@{$channel->{'spikes'}}) ) { # пробегаем по всем нейронам, которые дискриминировали в данном канале
 				
@@ -157,7 +157,7 @@ switch ($regime) {
 				# сохраняем результаты в вектор $result_data
 				# Сохраняем заголовок в виде хеша $data_header
 				my $low_ind = nelem($result_data);
-				my $upper_ind = nelem($spikes) + $low_ind -1;
+				my $upper_ind = nelem($spikes) + $low_ind - 1;
 				$result_data = $result_data -> append ($spikes);
 				${${$data_header}[$i] -> {"spikes"}}[$j] = 
 					{
@@ -175,7 +175,9 @@ switch ($regime) {
 		
 		matlab_write($target_file, $result_data);
 		my $processing_node_id = int($_getpost{'processing_node_id'});
-		&save_param($processing_node_id, $data_header);
+		
+		my $statistics = &get_statistics(\%_getpost);
+		&save_param($processing_node_id, $data_header, $statistics);
 		
 		
 	}
@@ -185,7 +187,7 @@ switch ($regime) {
 	}
 }
 ########################################################################
-################### libs of function ###################################
+################### lib of functions ###################################
 ########################################################################
 
 sub cut_stim_shift_spikes {
@@ -208,8 +210,20 @@ sub cut_stim_shift_spikes {
 	}
 	
 	return $spikes;
-	
-	
+}
+########################################################################
+sub get_statistics {
+	my $data = shift;
+	my $cut_stims = $data->{"cut_stims"} eq 'on' ? "Да" : "Нет";
+	my $cut_time =  $data->{"cut_stims"} eq 'on' ? qq( $data->{"time_cut_stims"}, сек до и после ) : " ";
+	my $bin = $data->{"rate_by_bins"} eq 'on' ? qq(<p> Бин для интегралки $data->{"bin"} сек </p>) : " " ;
+	my $stat = qq(
+	<div>
+		<p> Вырезались ли стимуляции? - $cut_stims $cut_time </p>
+		$bin
+	</div>
+	);
+	return $stat;
 }
 
 

@@ -23,7 +23,7 @@ $(document).ready(function(){
 	
 	var data = {
 		'processing_node_id': App.processing_node_id, 
-		'registrated_node_id':App.registrated_node_id, 
+		'registrated_path_id':App.registrated_path_id, 
 		'parent_processing_node_id':App.parent_processing_node_id, 
 		'regime': 'read',
 	}; 

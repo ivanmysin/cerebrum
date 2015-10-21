@@ -16,6 +16,7 @@ use CGI::Carp qw (fatalsToBrowser);
 use Storable;
 use CGI::Cookie;
 
+
 our %_getpost;
 our $_session;
 our $dbh;
@@ -29,9 +30,7 @@ sub set_config {
 	use constant ENTER_POINT => GCI_SCRIPTS_DIR."index.pl";
 	use constant TITLE => "cerebrum";
 	use constant UPLOAD_DIR => "/home/ivan/mysites/upload/";
-
 	use constant SOURCE_DIR => "/home/ivan/mysites/sources_files/";
-	
 	use constant JS_DIR => PATH."js/";
 	use constant JS_FOR_MODULS_DIR => JS_DIR."ajax/";
 	use constant MAT_FILES_DIR => "/home/ivan/mysites/mat_files/";
@@ -198,26 +197,20 @@ sub clear { my $s=shift; return &_quote(&trim($s))}
 
 ########################################################################
 sub start_session {
-	my $ip = $ENV{'REMOTE_ADDR'};
-	my $user_agent = $ENV{'HTTP_USER_AGENT'};
+	my $ip = &clear($ENV{'REMOTE_ADDR'});
+	my $user_agent = &clear($ENV{'HTTP_USER_AGENT'});
 	my %cookies = CGI::Cookie->fetch;
-	if (defined($cookies{'session_id'})) {
+	
+	if ( defined($cookies{'session_id'}) and ($cookies{'session_id'}->value > 0) ) {
+		
 		my $session_id = $cookies{'session_id'}->value;
-		my $file = get_session_file ($session_id, $ip, $user_agent);
-		if ($file) {
-			our $_session = retrieve(SESSION_FILES_DIR.$file);
-		} else {
-			my $session_id = &create_new_session($ip, $user_agent);
-			our $_session = {'session_id' => $session_id};
-			my $cookies = CGI::Cookie->new(
-							-name    =>  'session_id',
-							-value   =>  $session_id,
-							-expires =>  '+3M');
-			print "Set-Cookie: $cookies\n";
-		}
+		$_session = &get_session_data($session_id, $ip, $user_agent);
+		$_session->{'session_id'} = $session_id;
+
 	} else {
+
 		my $session_id = &create_new_session($ip, $user_agent);
-		our $_session = {'session_id' => $session_id};
+		$_session = {'session_id' => $session_id};
 		my $cookies = CGI::Cookie->new(
 						-name    =>  'session_id',
                         -value   =>  $session_id,
@@ -226,10 +219,10 @@ sub start_session {
 	}
 }
 
-sub save_session {
-	my $file = $_session -> {"session_id"};
-	store($_session, SESSION_FILES_DIR.$file) or die "Can't store session\n";
-}
+#sub save_session {
+	#my $file = $_session -> {"session_id"};
+	#store($_session, SESSION_FILES_DIR.$file) or die "Can't store session\n";
+#}
 
 ########################################################################
 sub read_file {
@@ -250,8 +243,14 @@ sub read_file {
 	return $file_content;
 }
 ########################################################################
+sub print_log {
+	my $logged = shift;
+	open (FILE, ">log.txt");
+	print FILE $logged;
+	close (FILE);
+}
 
 ########################################################################
 
-
+########################################################################
 1;

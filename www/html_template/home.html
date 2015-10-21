@@ -1,0 +1,148 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+    <div class="container_12">
+        <div class="grid_12 header-repeat">
+            <div id="branding">
+                <div class="floatleft">
+                    <img src="http://cerebrum.loc/img/logo1.png" alt="Logo" class="logotip_img" />
+                </div>
+                <p class="program_title"> Cerebrum </p>
+                <div class="floatright">
+                    <div class="floatleft">
+                        <img src="http://cerebrum.loc/img/img-profile.jpg" alt="Profile Pic" />
+                    </div>
+                    <div class="floatleft marginleft10">
+                        <ul class="inline-ul floatleft">
+                            <li>Привет, Иван!</li>
+                            <li><a href="#">Натройки профиля</a></li>
+                            <li><a href="?view=logout">Выйти</a></li>
+                        </ul>
+                        <br />
+                    </div>
+                </div> <!-- .floatright -->
+                <div class="clear"></div>
+            </div> <!-- .branding -->
+        </div> <!-- .grid_12 header-repeat-->
+        <div class="clear"></div>
+		
+<!-- здесь заканчивается хедер и начинается верхнее меню !!!! -->
+        <div class="grid_12">
+            <ul class="nav main">
+		<li class="ic-dashboard"><a href="?view=home"><span>Главная</span></a> </li>
+		<li class="ic-form-style"><a href="javascript:"><span>Добавить</span></a>
+		<ul>
+			<li><a href="?view=add_record" >Добавить запись</a> </li>
+			<li><a href="?view=add_group" >Добавить группу</a> </li>
+			<li><a href="?view=add_seria" >Добавить серию</a> </li>
+		</ul>
+		</li>
+		<li class="ic-typography"><a href="javascript:"><span>Редактировать</span></a>
+		<ul>
+			<li><a href="?view=records" >Редактировать записи</a> </li>
+			<li><a href="?view=groups" >Редактировать группы</a> </li>
+			<li><a href="?view=series" >Редактировать серии</a> </li>
+		</ul>
+		</li>
+		<li class="ic-grid-tables"><a href="#"><span>Таблица данных</span></a> </li>
+		<li class="ic-notifications"><a href="javascript:"><span>Функции</span></a>
+		<ul>
+			<li><a href="#" >Импульсная активность</a> </li>
+			<li><a href="#" >Полевая активность</a> </li>
+		</ul>
+		</li>
+                
+            </ul> <!-- .nav main -->
+        </div> <!-- .grid_12 -->
+        <div class="clear"></div>
+<!-- здесь заканчивается верхнее меню и начинается левый бар !!!!! -->
+	
+        <div class="grid_2">
+            <div class="box sidemenu">
+                <div class="block" id="section-menu">
+					<p class="menutitle">Группы животных</p>
+                    <ul class="section menu">
+						<li><a class="menuitem" href="#">Эпилептики</a>
+							<ul class="submenu">
+								<li><a href="#">133</a> </li>
+							</ul>
+						</li>
+						<li><a class="menuitem" href="#">Контроль</a>
+							<ul class="submenu">
+								<li><a href="#">test</a> </li>
+								<li><a href="#">209</a> </li>
+								<li><a href="#">208</a> </li>
+							</ul>
+						</li>
+                    </ul> <!-- .section menu -->
+                </div> <!-- .block, #section menu-->
+            </div> <!-- .box sidemenu -->
+        </div> <!-- .grid_2 -->
+	
+	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
+        <div class="grid_10">
+            <div class="box round first">
+                <h2>холинергическая серия</h2>
+            <div class="box round first">
+				<table class="data display datatable" style="margin-top: 10px; width:200px; float:left">
+					<thead style="text-align:left">
+						<tr>
+							<th>Название записи</th>
+							<th>Группа</th>
+						</tr>
+					</thead>
+					<tbody>
+			<tr class="odd gradeX">
+						<td colspan="2" class="group_name_at_home">Контроль</td>
+					</tr>
+			<tr class="odd gradeX">
+			<td><a href="?view=processing&record_id=65&record_name=test" class="goToProcessing">test</a></td>
+			<td>Контроль</td>
+		</tr>		<tr class="odd gradeX">
+			<td><a href="?view=processing&record_id=74&record_name=209" class="goToProcessing">209</a></td>
+			<td>Контроль</td>
+		</tr>		<tr class="odd gradeX">
+			<td><a href="?view=processing&record_id=75&record_name=208" class="goToProcessing">208</a></td>
+			<td>Контроль</td>
+		</tr>		<tr>
+								<td colspan="2" class="group_name_at_home">Эпилептики</td>
+							</tr>		<tr class="odd gradeX">
+			<td><a href="?view=processing&record_id=73&record_name=133" class="goToProcessing">133</a></td>
+			<td>Эпилептики</td>
+		</tr>
+					</tbody>
+				</table>
+            </div>
+        	<div class="clear"></div>
+	<div class="trees_wrapper">
+			<div class="record_tree">Запись: 208 
+				<div class="trees"> </div>
+				<script> 
+					var treeObj = $('.trees:last').jstree({"core":{"data":[{"icon":"False","state":{"opened":1},"parent":"#","id":"1444","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1444> Старт </a> \n\n\t\t"},{"parent":"1444","icon":"False","state":{"opened":1},"id":"1445","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1445> Дескриминация </a> \n\n\t\t"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1446> Дескриминация </a> \n\n\t\t","parent":"1444","icon":"False","state":{"opened":1},"id":"1446"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1447> Интегралка </a> \n\n\t\t","state":{"opened":1},"icon":"False","parent":"1446","id":"1447"},{"parent":"1446","icon":"False","state":{"opened":1},"id":"1448","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1448> Интегралка </a> \n\n\t\t"},{"id":"1449","icon":"False","state":{"opened":1},"parent":"1446","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1449> Интегралка </a> \n\n\t\t"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1450> Интегралка </a> \n\n\t\t","icon":"False","state":{"opened":1},"id":"1450","parent":"1446"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1452> ГМИ </a> \n\n\t\t","id":"1452","icon":"False","state":{"opened":1},"parent":"1450"},{"icon":"False","state":{"opened":1},"parent":"1450","id":"1453","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1453> ГМИ </a> \n\n\t\t"},{"parent":"1450","icon":"False","state":{"opened":1},"id":"1454","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1454> Автокоррелограмма </a> \n\n\t\t"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1455> Автокоррелограмма </a> \n\n\t\t","icon":"False","id":"1455","state":{"opened":1},"parent":"1450"},{"icon":"False","id":"1456","state":{"opened":1},"parent":"1450","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1456> Автокоррелограмма </a> \n\n\t\t"},{"icon":"False","state":{"opened":1},"id":"1457","parent":"1456","text":"\n\t\t<a href=?view=get_processed&processing_node_id=1457> Спектр нейрона </a> \n\n\t\t"},{"text":"\n\t\t<a href=?view=get_processed&processing_node_id=1458> Спектр нейрона </a> \n\n\t\t","icon":"False","id":"1458","state":{"opened":1},"parent":"1456"}]}}).on("select_node.jstree", function (e, data) { 
+						var href = data.node.a_attr.href;
+						document.location.href = href;
+					});
+				</script>
+			</div>
+		
+			</div> <!-- .trees_wrapper -->
+		</div>
+	</div>	
+</div> <!-- .container_12 -->
+
+
+    <!--  Отсюдова начинается подвал сайта!!!!! -->	
+	<div class="clear"></div>
+	<div class="page-buffer"></div>
+    <div id="site_info">
+        <p>
+            Copyright <a href="#">Mysin Ivan</a>. Все права защищены.
+        </p>
+    </div><!--wrapper end-->
+
+</body>
+</html>

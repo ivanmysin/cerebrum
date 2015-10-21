@@ -3,6 +3,7 @@
 
 use strict;
 use warnings;
+use JSON;
 our %_getpost;
 our $_session;
 
@@ -11,7 +12,8 @@ our $_session;
 sub print_header {
 	my $path = PATH;
 	my $title = TITLE;
-	my $cgi_path = GCI_SCRIPTS_DIR;
+	my $index_path = ENTER_POINT;
+	my $js_fir = JS_DIR;
 	print qq (
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -29,6 +31,7 @@ sub print_header {
     <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.structure.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.theme.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/jquery.svg.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="${path}css/jstreestyle.min.css" media="screen" />
 
     <link rel="stylesheet" type="text/css" href="${path}css/mystyles.css" media="screen" />
     
@@ -36,17 +39,19 @@ sub print_header {
     <!--[if IE 7]><link rel="stylesheet" type="text/css" href="${path}css/ie.css" media="screen" /><![endif]-->
     
     <!-- BEGIN: load jquery -->
-    <script src="${path}js/jquery-2.1.4.min.js" type="text/javascript"></script>
-    <script src="${path}js/jquery-ui.min.js" type="text/javascript"> </script>
+    <script src="${js_fir }jquery-2.1.4.min.js" type="text/javascript"></script>
+    <script src="${js_fir}jquery-ui.min.js" type="text/javascript"> </script>
+    <script src="${js_fir}jstree.min.js" type="text/javascript"> </script>
+<!-- This scripts conflict with jstree !!!
+	<script src="${js_fir}jquery.svg/jquery.svg.min.js"></script>
+	<script src="${js_fir}jquery.svg/jquery.svganim.min.js"></script>
+	<script src="${js_fir}query.svg/jquery.svgdom.min.js"></script>
+-->  
 
-	<script src="${path}js/jquery.svg/jquery.svg.min.js"></script>
-	<script src="${path}js/jquery.svg/jquery.svganim.min.js"></script>
-	<script src="${path}js/jquery.svg/jquery.svgdom.min.js"></script>
-    
-
-    <script src="${path}js/setup.js" type="text/javascript"></script>
-	<script src="${path}js/myjs.js" type="text/javascript"></script>
-	<script type="text/javascript"> window.cgi_path="${cgi_path}" </script>
+    <script src="${js_fir}setup.js" type="text/javascript"></script>
+	<script src="${js_fir}myjs.js" type="text/javascript"></script>
+	<script> window.path="${index_path}" </script>
+	
 	<script type="text/javascript">
 		\$(document).ready(function(){
 			setupLeftMenu();
@@ -72,20 +77,28 @@ sub print_header {
                 <div class="floatleft">
                     <img src="${path}img/logo1.png" alt="Logo" class="logotip_img" />
                 </div>
-                <p class="program_title"> Cerebrum </p>
-                <div class="floatright">
-                    <div class="floatleft">
-                        <img src="${path}img/img-profile.jpg" alt="Profile Pic" />
-                    </div>
-                    <div class="floatleft marginleft10">
-                        <ul class="inline-ul floatleft">
-                            <li>Привет, Иван!</li>
-                            <li><a href="#">Натройки профиля</a></li>
-                            <li><a href="#">Выйти</a></li>
-                        </ul>
-                        <br />
-                    </div>
-                </div> <!-- .floatright -->
+                <p class="program_title"> Cerebrum </p>);
+    if ($_session->{"user_id"}) {
+    
+		print qq(            
+					<div class="floatright">
+						<div class="floatleft">
+							<img src="${path}img/img-profile.jpg" alt="Profile Pic" />
+						</div>
+						
+						<div class="floatleft marginleft10">
+							<ul class="inline-ul floatleft">
+								<li>Привет, $_session->{"username"}! </li>
+								<li><a href="?view=userprofile">Данные профиля</a></li>
+								<li><a href="?view=logout">Выйти</a></li>
+							</ul>
+							<br />
+						</div>
+					</div> <!-- .floatright -->
+			 );
+    };
+    print qq(       
+                
                 <div class="clear"></div>
             </div> <!-- .branding -->
         </div> <!-- .grid_12 header-repeat-->
@@ -105,7 +118,7 @@ qq(
 	foreach my $menu (@menu) {
 		if (@{$menu->{'sub'}} > 0) {
 			print qq(		<li class="$menu->{'main'}{'class'}"><a href="javascript:"><span>$menu->{'main'}{'name'}</span></a>\n);
-			my @sub= @{$menu->{'sub'}};
+			my @sub = @{$menu->{'sub'}};
 			print qq(		<ul>\n);
 				foreach my $sub (@sub) {
 					print qq(			<li><a href="$sub->{'reference'}" >$sub->{'name'}</a> </li>\n);
@@ -134,7 +147,7 @@ qq (
         <div class="grid_2">
             <div class="box sidemenu">
                 <div class="block" id="section-menu">
-					<p class="menutitle">Группы животных</p>
+					<p class="menutitle">Записи</p>
                     <ul class="section menu">
 						
 );
@@ -152,9 +165,9 @@ qq (
 				print qq(					<li><a href="#">$name</a> </li>\n);
 
 			}
-			print qq(				</ul>\n);
+			print qq(				</ul></li>\n);
 		} else {
-			print qq(			<li><a class="menuitem" href="#">$menu{$key}{'main'}{'name'}</a>\n);
+			print qq(			<li><a class="menuitem" href="#">$menu{$key}{'main'}{'name'}</a></li>\n);
 		}
 		
 	}
@@ -168,7 +181,9 @@ qq (
 ########################################################################
 sub print_home {
 	my $home_data = shift;
+	my $tree = shift;
 	my $path = PATH;
+	
 	print qq (
 	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
         <div class="grid_10">
@@ -205,26 +220,46 @@ sub print_home {
 					</tbody>
 				</table>
             </div>
-        <div class="clear"></div>
-    </div> <!-- .container_12 -->
-    <div class="clear"></div>
+        	<div class="clear"></div>
 	);
+	
+	print qq(<div class="trees_wrapper">);
+	
+	foreach my $t (@{$tree}) {
+		print qq(
+			<div class="record_tree">Запись: $t->{"record_name"} 
+				<div class="trees"> </div>
+				<script> 
+					var treeObj = \$('.trees:last').jstree($t->{"json_tree"}).on("select_node.jstree", function (e, data) { 
+						var href = data.node.a_attr.href;
+						document.location.href = href;
+					});
+				</script>
+			</div>
+		);
+	}
+	
+	print qq(
+			</div> <!-- .trees_wrapper -->
+		</div>
+	</div>	
+</div> <!-- .container_12 -->
+);
+
+	
 }
 ########################################################################
 sub print_footer {
 	print qq (
-		</div>
-	</div>	
+
     <!--  Отсюдова начинается подвал сайта!!!!! -->	
 	<div class="clear"></div>
+	<div class="page-buffer"></div>
     <div id="site_info">
         <p>
             Copyright <a href="#">Mysin Ivan</a>. Все права защищены.
         </p>
-    </div>
-    <!--wrapper end-->
-	<!--Dynamically creates analytics markup-->
-
+    </div><!--wrapper end-->
 
 </body>
 </html>
@@ -348,8 +383,9 @@ sub print_add_record {
 sub print_add_group {
 	my $add_group = shift;
 	my $path = PATH;
+	my $js_fir = JS_DIR;
 	print qq (
-	<script src="${path}js/ckeditor/ckeditor.js"></script>
+	<script src="${js_fir}ckeditor/ckeditor.js"></script>
 	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
         <div class="grid_10">
             <div class="box round first">
@@ -455,10 +491,32 @@ sub print_add_seria {
                                 <input type="checkbox" name="current" checked/>
                             </td>
                         </tr>
+                        
+                        <tr>
+                            <td class="col1">
+                                <label> Предоставить права на чтение пользователю </label>
+                            </td>
+                            <td class="col2">
+                                <input type="text" name="read_users" />
+                                <button class="btn-icon btn-grey btn-plus adduser" type="button"><span></span> Добавить </button>
+                                <button class="btn-icon btn-red btn-cross deleteuser" type="button"><span></span> Удалить </button>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="col1">
+                                <label> Предоставить права на редактирование пользователю </label>
+                            </td>
+                            <td class="col2">
+                                <input type="text" name="write_users" />
+                                <button class="btn-icon btn-grey btn-plus adduser" type="button"><span></span> Добавить </button>
+                                <button class="btn-icon btn-red btn-cross deleteuser" type="button"><span></span> Удалить </button>
+                            </td>
+                        </tr>
 
                         <tr>
                             <td style="vertical-align: top; padding-top: 9px;">
-                                <label> Замечания к записи </label>
+                                <label> Замечания к серии </label>
                             </td>
                             <td>
                                 <textarea id="editor1" rows="10" cols="45" name="description"></textarea>
@@ -913,15 +971,18 @@ sub print_processing {
 	my $processing = shift;
 	my $registrated_data = shift;
 	my $targets = shift;
+	
 	my $parent_processing_node_id = shift;
 	my $record_id = shift;
+	my $path_id = shift;
 	
 	my $html_code = $registrated_data->{'html_code'};
 	my $server_script = MUDULES_CONTROLLER;
 	my $js_file = JS_FOR_MODULS_DIR.$registrated_data->{'js_file'};
 	my $css_file = CSS_FILES_MODULES_DIR.$registrated_data->{'css_file'};
 
-	#my $js_dir = JS_FOR_MODULS_DIR;
+	my $js_fir = JS_DIR;
+
 	print qq(
 	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
     <div class="grid_10">
@@ -932,7 +993,7 @@ sub print_processing {
 				window.App = {}; // Global structure for all global vars of application
 				App.server_script = "$server_script";
 				App.processing_node_id = $processing->{'id'};
-				App.registrated_node_id = $processing->{'id_registrated_node'};
+				App.registrated_path_id = $path_id;
 				App.parent_processing_node_id = $parent_processing_node_id;
 				App.record_id = $record_id;
 				App.params = {};   // structure for sending parameters to server in json format
@@ -944,36 +1005,165 @@ sub print_processing {
 		print qq (
 			<form class="button_top_menu" method="POST">
 				<input type="hidden" name="processing_node_id" value="$processing->{'id'}"   />
-				<input type="hidden" name="registrated_node_id" value="$t->{'id'}"   />
+				<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
 				<input type="hidden" name="parent_processing_node_id" value="$parent_processing_node_id" />
 				<input type="hidden" name="view" value="processing"   />
 				<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
 			</form>		
-		
 		);
-	}
+	};
+	
+	print qq (
+		<form class="save_processed_node" method="POST">
+			<input type="hidden" name="processing_node_id" value="$processing->{'id'}"   />
+			<input type="hidden" name="parent_processing_node_id" value="$parent_processing_node_id" />
+			<input type="hidden" name="view" value="save_processed_node" />
+			<textarea name="processed_html_code" style="display:none;"> </textarea>
+			<textarea name="processed_params" style="display:none;"> </textarea>
+			<button class="btn btn-blue"> Сохранить текущие данные </button>
+		</form>		
+	);
 	
 	
     print qq (
 			</div> <!-- #menu_of_linked_nodes -->
 			</br>
             <div id="procc_container">
-
 				$html_code
-            
             </div> <!-- #procc_container -->
             <script src="$js_file" type="text/javascript"></script>
+            <script src="${js_fir}processing.js" type="text/javascript"></script>
 
 	);
-	
-	# &print_arr ($targets);
 	
 	print qq(
 		</div> <!-- .box round first-->
 	</div>	<!-- .grid_10 -->
 	);
 }
-# <script type="text/javascript">var record_id=$record_id;</script>	
 
+########################################################################
+sub print_processed_data {
+	my $data = shift;
+	
+	my $css_file = CSS_FILES_MODULES_DIR.$data->{"processed_data"}->{'css_file'};
+	print qq(
+	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
+    <div class="grid_10">
+        <div class="box round first">
+            <h2>Обработка записи: <i>$data->{"processed_data"}->{'name'}</i>. Текущая стадия обработки: <i></i> </h2>
+            <link rel="stylesheet" type="text/css" href="$css_file" media="screen" />
+			<script type="text/javascript">
+			</script>
+			<div id="menu_of_linked_nodes">);
+			
+	foreach my $t (@{$data->{"targets"}}) {
+		print qq(
+		<form class="button_top_menu" method="POST">
+				<input type="hidden" name="processing_node_id" value="$data->{"processed_data"}->{'processing_node_id'}"   />
+				<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
+				<input type="hidden" name="parent_processing_node_id" value="$data->{"processed_data"}->{"parent_processing_node_id"}" />
+				<input type="hidden" name="after_processing" value="1">
+				<input type="hidden" name="view" value="processing" />
+				<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
+			</form>
+		);	
+	}
+	
+	print qq(
+			</div> <!-- #menu_of_linked_nodes -->
+			</br>
+            <div id="procc_container">
+
+				$data->{"processed_data"}->{"html_processed_code"}e
+            
+            </div> <!-- #procc_container -->
+		</div> <!-- .box round first-->
+	</div>	<!-- .grid_10 -->
+	
+	
+	 );
+	
+}
+########################################################################
+sub print_authorization {
+	my $error="";
+	if ($_session->{"error"}) {
+		$error .= qq(<div class="error"> Авторизация не удалась. Неправильный логин или пароль </div>);
+		delete ($_session->{"error"});
+	};
+	print qq(
+	<section class="container">
+		<div class="login">
+		<h1>Вход в приложение</h1>
+		$error
+		<form method="post" class="authorizarion_form">
+		  	<input type="hidden" name="view" value="authorization_query" />
+			<p><input type="text" name="login" placeholder="Логин"></p>
+			<p><input type="password" name="password" placeholder="Пароль"></p>
+			<p class="submit"><input type="submit" name="commit" value="Войти"></p>
+		</form>
+		</div>
+		<div class="login-help">
+			<a href="?view=registration"> Регистрация </a>
+		</div>
+	  </section>
+	);
+}
+########################################################################
+sub print_registration {
+	my $error="";
+	if ($_session->{"error"}) {
+		$error .= qq(<div class="error"> Произошла ошибка при регистрации. Возможно пользователь с таким логином уже зарегистрирован в системе. Выберите другой логин</div>);
+		delete ($_session->{"error"});
+	};
+	print qq(
+	<section class="container">
+		$error
+		<div class="login">
+		  <h1>Регистрация в приложении</h1>
+		  <form method="post" class="authorizarion_form">
+			<p><input type="text" name="login" placeholder="Логин"></p>
+			<p><input type="password" name="password" placeholder="Пароль"></p>
+			<p><input type="text" name="username" placeholder="Имя"></p>
+			<p><input type="text" name="userpatronymic" placeholder="Отчество"></p>
+			<p><input type="text" name="usersurname" placeholder="Фамилия"></p>
+			<p> <span style="font-size:10pt;font-weight:bold;"> Фотография профиля </span> <input type="file" name="userphoto" ></p>
+			<input type="hidden" name="view" value="registration_query" />
+			<p style="font-size:10pt;font-weight:bold;"> Дополнительная информация о пользователе </p>
+			<p><textarea name="userinfo" style="width:100%; height:100px;"></textarea></p>
+			<p class="submit"><input type="submit" name="commit" value="Зарегистрироваться"></p>
+		  </form>
+		</div>
+		<div class="login-help">
+		  <a href="?view=authorization"> Вернуться на страницу авторации </a>
+		</div>
+	  </section>
+	);
+	
+}
+########################################################################
+sub print_userdata {
+	my $data = shift;
+	print qq(
+	<section class="container">
+		<div class="login">
+			<h1> Редактирование данных пользователя </h1>
+			<form method="post" class="authorizarion_form">
+				<p>Пароль </br> <input type="password" name="password" value="$data->{"password"}"></p>
+				<p>Имя </br> <input type="text" name="username" value="$data->{"name"}"></p>
+				<p>Отчество </br><input type="text" name="userpatronymic" value="$data->{"patronymic"}"></p>
+				<p>Фамилия </br><input type="text" name="usersurname" value="$data->{"surname"}"></p>
+				<p> <span style="font-size:10pt;font-weight:bold;"> Фотография профиля </span> <input type="file" name="userphoto" ></p>
+				<input type="hidden" name="view" value="registration_update" />
+				<p> <span style="font-size:10pt;font-weight:bold;"> Дополнительная информация о пользователе </span> 
+					<textarea name="userinfo" style="width:100%; height:100px;">$data->{"info"}</textarea>
+				</p>
+				<p class="submit"><input type="submit" name="commit" value="Обновить данные профиля"></p>
+			</form>
+		</div>
+	</section>
+	);
+}
 ########################################################################
 1;
