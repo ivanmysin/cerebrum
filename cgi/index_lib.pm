@@ -15,7 +15,7 @@ use CGI::Carp qw (fatalsToBrowser);
 
 use Storable;
 use CGI::Cookie;
-
+use JSON;
 
 our %_getpost;
 our $_session;
@@ -201,11 +201,22 @@ sub start_session {
 	my $user_agent = &clear($ENV{'HTTP_USER_AGENT'});
 	my %cookies = CGI::Cookie->fetch;
 	
-	if ( defined($cookies{'session_id'}) and ($cookies{'session_id'}->value > 0) ) {
+	if ( defined($cookies{'session_id'}) )  {
 		
 		my $session_id = $cookies{'session_id'}->value;
-		$_session = &get_session_data($session_id, $ip, $user_agent);
-		$_session->{'session_id'} = $session_id;
+		my $session = &get_session_data($session_id, $ip, $user_agent);
+		if ( defined($session) ) {
+			$_session = JSON->new->utf8(1)->decode($session);
+			$_session->{'session_id'} = $session_id;
+		} else {
+			my $session_id = &create_new_session($ip, $user_agent);
+			$_session = {'session_id' => $session_id};
+			my $cookies = CGI::Cookie->new(
+						-name    =>  'session_id',
+                        -value   =>  $session_id,
+                        -expires =>  '+3M');
+			print "Set-Cookie: $cookies\n";
+		}
 
 	} else {
 

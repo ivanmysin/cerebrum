@@ -240,24 +240,37 @@ sub added_seria {
 }
 ########################################################################
 sub get_records {
-	my $query = "SELECT records.records_id, records.name, records.description, DATE_FORMAT(date,'%d/%m/%Y') AS date, 
-					series.name AS series_name, sub_series.name AS group_name FROM records 
-					INNER JOIN sub_series ON records.sub_series_id = sub_series.id 
-					INNER JOIN series ON records.series_id = series.series_id"; # "SELECT *, DATE_FORMAT(date,'%d/%m/%Y') as date FROM records";
+	my $user_id = $_session->{"user_id"};
+	my $query = qq(
+		SELECT records.records_id, records.name, records.description, DATE_FORMAT(date,'%d/%m/%Y') AS date, 
+			series.name AS series_name, sub_series.name AS group_name FROM records 
+		INNER JOIN sub_series ON records.sub_series_id = sub_series.id 
+		INNER JOIN series ON records.series_id = series.series_id
+		WHERE series.series_id IN ( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write", "read") )
+	); 
 	my @res = &mysql_select_query($query);
 	return \@res;
 }
 ########################################################################
 sub get_groups {
-	my $query = "SELECT sub_series.id, sub_series.name, sub_series.description, sub_series.current,
-					series.name AS series_name FROM sub_series 
-					INNER JOIN series ON sub_series.parent_seria_id = series.series_id";
+	my $user_id = $_session->{'user_id'};
+	my $query = qq(
+		SELECT sub_series.id, sub_series.name, sub_series.description, sub_series.current,
+			series.name AS series_name FROM sub_series 
+			INNER JOIN series ON sub_series.parent_seria_id = series.series_id
+		WHERE series.series_id IN ( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write", "read") )
+	);
 	my @res = &mysql_select_query($query);
 	return \@res;
 }
 ########################################################################
 sub get_series {
-	my $query = "SELECT * FROM series";
+	my $user_id = $_session->{'user_id'};
+	my $query = qq(
+		SELECT series.series_id, series.name, series.description, access.access_type FROM series 
+		INNER JOIN access ON series.series_id=access.series_id
+		WHERE access.user_id=$user_id AND access_type IN ("host", "write", "read") 
+	);
 	my @res = &mysql_select_query($query);
 	return \@res;
 }
@@ -278,7 +291,6 @@ sub edited_record {
 	my $date = clear($_getpost{'date'});
 	my $description = clear($_getpost{'description'});
 	my $query = "UPDATE records SET series_id='$ser_id', sub_series_id='$group_id', name=$name, date=STR_TO_DATE($date, '%d/%m/%Y'), description=$description WHERE records_id='$record_id'";
-	# print $query;
 	&mysql_other_query($query);
 }
 ########################################################################
@@ -297,10 +309,10 @@ sub edited_group {
 	my $current = 0;
 	if ($_getpost{'current'} eq 'on') {
 		$current = 1;
-		my $query = "UPDATE sub_series SET current=0 WHERE parent_seria_id='$series_id'";
+		my $query = qq(UPDATE sub_series SET current=0 WHERE parent_seria_id=$series_id); # Начать отсюда !!!!!!
 		&mysql_other_query($query);
 	}
-	my $query = "UPDATE sub_series SET parent_seria_id='$series_id', name=$name, current='$current', description=$description WHERE id='$group_id'";
+	my $query = qq(UPDATE sub_series SET parent_seria_id=$series_id, name=$name, current=$current, description=$description WHERE id=$group_id);
 	&mysql_other_query($query);
 }
 ########################################################################
@@ -316,12 +328,16 @@ sub edited_seria {
 	my $name = &clear($_getpost{'seria_name'});
 	my $description = &clear($_getpost{'description'});
 	my $current = 0;
+	my $user_id = $_session->{'user_id'};
 	if ($_getpost{'current'} eq 'on') {
 		$current = 1;
-		my $query = "UPDATE series SET current=0";
+		my $query = qq(UPDATE series SET current=0 WHERE series_id IN ( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") ) );
 		&mysql_other_query($query);
 	}
-	my $query = "UPDATE series SET name=$name, description=$description, current='$current' WHERE series_id=$series_id";
+	my $query = qq( 
+			UPDATE series SET name=$name, description=$description, current='$current' 
+				WHERE series_id=$series_id AND series_id IN (SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") )
+			);
 	&mysql_other_query($query);
 }
 ########################################################################
@@ -341,11 +357,8 @@ sub delete_group {
 ########################################################################
 sub delete_seria {
 	my $series_id = shift;
-	my $query = "DELETE FROM records WHERE series_id='$series_id'";
-	&mysql_other_query($query);
-	$query = "DELETE FROM sub_series WHERE parent_seria_id='$series_id'";
-	&mysql_other_query($query);
-	$query = "DELETE FROM series WHERE series_id='$series_id'";
+	my $user_id = $_session->{"user_id"};
+	my $query = qq(DELETE FROM series WHERE series_id=$series_id AND series_id IN ( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host") ) );
 	&mysql_other_query($query);	
 }
 ########################################################################
@@ -362,6 +375,9 @@ sub get_home_data {
 		records.name AS record_name, processing_nodes.statistics
 		FROM processing_nodes INNER JOIN registrated_nodes ON registrated_nodes.id = processing_nodes.id_registrated_node 
 			INNER JOIN records ON processing_nodes.id_record=records.records_id
+			INNER JOIN sub_series ON records.sub_series_id=sub_series.id
+			INNER JOIN series ON series.series_id = sub_series.parent_seria_id
+			WHERE series.current=0 AND sub_series.current=0
 			ORDER BY processing_nodes.id_record
 	);
 	
@@ -538,9 +554,7 @@ sub get_session_data {
 	my $user_agent = shift;
 	my $query = "SELECT session_id, data FROM session WHERE session_id=$session_id AND IP=$ip AND user_agent=$user_agent";
 	my @res = &mysql_select_query($query);
-	my $session = JSON->new->utf8(1)->decode($res[0]->{"data"});
-	
-	return $session;
+	return $res[0]->{"data"};
 }
 
 =h

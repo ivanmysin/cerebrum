@@ -200,29 +200,37 @@ sub print_home {
 					<tbody>
 	);
 	my $previous_group = ${$home_data}[0]->{'group_name'};
-	print qq(		<tr class="odd gradeX">
-						<td colspan="2" class="group_name_at_home">$previous_group</td>
-					</tr>
-	);
-	foreach my $t (@{$home_data}) {
-		if ($previous_group ne $t->{'group_name'}) {
-			print qq(		<tr>
-								<td colspan="2" class="group_name_at_home">$t->{'group_name'}</td>
-							</tr>);
-		}
-		print qq(		<tr class="odd gradeX">\n);
-		print qq(			<td><a href="?view=processing&record_id=$t->{'records_id'}&record_name=$t->{'record_name'}" class="goToProcessing">$t->{'record_name'}</a></td>\n);
-		print qq(			<td>$t->{'group_name'}</td>\n);
-		print qq(		</tr>);
-		$previous_group = $t->{'group_name'};
-	};
+	
+	if ($previous_group) {
+	
+		print qq(		<tr class="odd gradeX">
+							<td colspan="2" class="group_name_at_home">$previous_group</td>
+						</tr>
+		);
+		foreach my $t (@{$home_data}) {
+			if ($previous_group ne $t->{'group_name'}) {
+				print qq(		<tr>
+									<td colspan="2" class="group_name_at_home">$t->{'group_name'}</td>
+								</tr>);
+			}
+			print qq(		<tr class="odd gradeX">\n);
+			print qq(			<td><a href="?view=processing&record_id=$t->{'records_id'}&record_name=$t->{'record_name'}" class="goToProcessing">$t->{'record_name'}</a></td>\n);
+			print qq(			<td>$t->{'group_name'}</td>\n);
+			print qq(		</tr>);
+			$previous_group = $t->{'group_name'};
+		};
+	} else {
+		print qq(<tr> <td colspan="2" class="group_name_at_home"> В этой серии записей пока нет </td> </tr>);
+		
+	}	
+		
 	print qq(
 					</tbody>
 				</table>
-            </div>
-        	<div class="clear"></div>
+			</div>
+		<div class="clear"></div>
 	);
-	
+
 	print qq(<div class="trees_wrapper">);
 	
 	foreach my $t (@{$tree}) {
@@ -661,8 +669,18 @@ sub print_series {
 		print qq(			<td>$t->{'series_id'}</td>\n);
 		print qq(			<td>$t->{'name'}</td>\n);
 		print qq(			<td>$t->{'description'}</td>\n);
-		print qq(			<td><a href="?view=edit_seria&series_id=$t->{'series_id'}" class="edit_ref">Редактировать</a></td>\n);
-		print qq(			<td><a href="?view=delete_seria&series_id=$t->{'series_id'}" class="delete_ref">Удалить</a></td>\n);
+
+		if ($t->{"access_type"} eq "host" or $t->{"access_type"} eq "write") {
+			print qq (		<td> <a href="?view=edit_seria&series_id=$t->{'series_id'}" class="edit_ref">Редактировать</a></td>\n);
+		} else {
+			print qq (		<td> Доступ к редактированию этой серии вам закрыт </td>\n);
+		}
+		
+		if ( $t->{"access_type"} eq "host") {
+			print qq(			<td><a href="?view=delete_seria&series_id=$t->{'series_id'}" class="delete_ref">Удалить</a></td>\n);
+		} else {
+			print qq(			<td> Доступ к удалению этой серии вам закрыт </td>\n);
+		}
 		print qq(		</tr>);
 	};
 	print qq(
