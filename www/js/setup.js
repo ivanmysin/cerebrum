@@ -435,9 +435,10 @@ function setupTinyMCE() {
 function setDatePicker(containerElement) {
     var datePicker = $('#' + containerElement);
     datePicker.datepicker({
-        showOn: "button",
-        buttonImage: "img/calendar.gif",
-        buttonImageOnly: true
+        //showOn: "button",
+        //buttonImage: "img/calendar.gif",
+        // buttonImageOnly: true,
+        dateFormat: 'dd/mm/yy', 
     });
 }
 //setup progressbar
@@ -494,7 +495,9 @@ function setupAccordion(containerElement) {
 function setupLeftMenu() {
     $("#section-menu")
         .accordion({
-            "header": "a.menuitem"
+            header: "a.menuitem",
+            icons : false,
+			collapsible: true, active: true,
         })
         .bind("accordionchangestart", function (e, data) {
             data.newHeader.next().andSelf().addClass("current");
@@ -502,7 +505,7 @@ function setupLeftMenu() {
         })
         .find("a.menuitem:first").addClass("current")
         .next().addClass("current");
-		
+	
 		$('#section-menu .submenu').css('height','auto');
 }
 

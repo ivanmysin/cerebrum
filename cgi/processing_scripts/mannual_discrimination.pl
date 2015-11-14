@@ -20,6 +20,18 @@ use model;
 our %_getpost;
 print "Content-Type: text/html charset=utf-8\n\n";
 
+&start_session();
+our $_session;
+
+
+my $processing_node_id = int($_getpost{'processing_node_id'});
+my $access = &verify_user_acceess_to_processing_node($processing_node_id);
+if (not ($access eq "host" or $access eq "write")) {
+	print "Access denied";
+	exit();
+}
+
+
 my $sources_file = $_getpost{'source_file'}; 
 my $target_file = $_getpost{'target_file'};
 my $regime = $_getpost{'regime'};

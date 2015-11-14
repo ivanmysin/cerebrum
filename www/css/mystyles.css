@@ -2,23 +2,30 @@ html, body {
 	margin: 0;
 	padding: 0;
 	width: 100%;
-  	min-height: 100%;
 }
 
-#site_info {
-	height: 50px;
-  	margin-top: 0px;
+html {
+   height: 100%;
 }
 
-.page-buffer {
-    height: 50px;
+body {
+   height: 100%;
+}
+
+#section-menu:hover {
+    color: black !important;
+}
+
+#section-menu .menuitem {
+    color: black !important;
+    border: none;
 }
 
 .container_12 {
-	height: 100%;
-    margin-bottom: -50px;
-
+	min-height: 100%;
+	margin: 0;
 }
+
 
 .program_title {
 	color: #FFFFFF;
@@ -94,8 +101,8 @@ html, body {
 }
 
 .trees_wrapper {
-
 	margin: 0px;
+	height: 100%;
 }
 
 

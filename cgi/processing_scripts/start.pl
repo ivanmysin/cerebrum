@@ -17,7 +17,16 @@ use model;
 &use_cgi();
 &set_config();
 our %_getpost;
+&start_session();
+our $_session;
 
+
+my $processing_node_id = int($_getpost{'processing_node_id'});
+my $access = &verify_user_acceess_to_processing_node($processing_node_id);
+if (not ($access eq "host" or $access eq "write")) {
+	print "Access denied";
+	exit();
+}
 
 
 my $regime = $_getpost{'regime'};
@@ -40,7 +49,7 @@ $data = double($data);
 switch ($regime) {
 	case("read") {
 		
-		my $intT = 10000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -1
+		my $intT = -1; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -1
 		my @send_array;
 		my $title = 'Potential';
 		for (my $i=0; $i<$nchs; $i++) {
@@ -82,7 +91,7 @@ switch ($regime) {
 		
 		matlab_write($target_file, $data);
 		
-		my $processing_node_id = int($_getpost{'processing_node_id'});
+		
 		my $statistics = &get_statistics($server_params);
 		&save_param($processing_node_id, $server_params, $statistics);
 		print "success";
@@ -90,7 +99,7 @@ switch ($regime) {
 	}
 	
 	case ("save") {
-		my $processing_node_id = int($_getpost{'processing_node_id'});
+		
 		my $statistics = &get_statistics($server_params);
 		&save_param($processing_node_id, $server_params, $statistics);
 		print "success";
@@ -130,5 +139,5 @@ sub get_statistics {
 	);
 	return $stat;
 }
-
+&save_session();
 

@@ -1,1 +1,9 @@
-Cooc: 58
+
+		UPDATE records SET series_id='0', sub_series_id='0', name='test', 
+			date=STR_TO_DATE('01/05/2015', '%d/%m/%Y'), description='<p>Jgbcfybt + описание</p>' 
+		WHERE records_id=65 AND records_id IN 
+		( 
+			SELECT records_id FROM records 
+			WHERE series_id IN ( SELECT series_id FROM access WHERE user_id=1 AND access_type IN ("host", "write") ) 
+		) 
+	

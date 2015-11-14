@@ -21,16 +21,20 @@ sub print_header {
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <title>$title</title>
     <link rel="icon" href="/alv.gif" type="image/gif">
+   
+    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.structure.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.theme.css" media="screen" />
+
+    
     <link rel="stylesheet" type="text/css" href="${path}css/reset.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/text.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/grid.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/layout.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="${path}css/nav.css" media="screen" />
-    
-    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.structure.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="${path}css/jquery-ui.theme.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="${path}css/jquery.svg.css" media="screen" />
+  
+
+
     <link rel="stylesheet" type="text/css" href="${path}css/jstreestyle.min.css" media="screen" />
 
     <link rel="stylesheet" type="text/css" href="${path}css/mystyles.css" media="screen" />
@@ -39,14 +43,9 @@ sub print_header {
     <!--[if IE 7]><link rel="stylesheet" type="text/css" href="${path}css/ie.css" media="screen" /><![endif]-->
     
     <!-- BEGIN: load jquery -->
-    <script src="${js_fir }jquery-2.1.4.min.js" type="text/javascript"></script>
+    <script src="${js_fir}jquery-2.1.4.min.js" type="text/javascript"></script>
     <script src="${js_fir}jquery-ui.min.js" type="text/javascript"> </script>
     <script src="${js_fir}jstree.min.js" type="text/javascript"> </script>
-<!-- This scripts conflict with jstree !!!
-	<script src="${js_fir}jquery.svg/jquery.svg.min.js"></script>
-	<script src="${js_fir}jquery.svg/jquery.svganim.min.js"></script>
-	<script src="${js_fir}query.svg/jquery.svgdom.min.js"></script>
--->  
 
     <script src="${js_fir}setup.js" type="text/javascript"></script>
 	<script src="${js_fir}myjs.js" type="text/javascript"></script>
@@ -58,16 +57,6 @@ sub print_header {
 			setSidebarHeight();
 		});
 	</script>
-	<script type="text/javascript">
-	    \$(window).load(function () {
-            \$('#demo-side-bar').removeAttr('style');
-	    });
-	</script>
-
-	<style type="text/css">
-		#demo-side-bar{left:90%!important;display:block!important;}
-		#branding .floatright{margin-right:130px!important;}
-	</style>
 </head>
 <body>
 	<!--Dynamically creates ads markup-->
@@ -228,7 +217,7 @@ sub print_home {
 					</tbody>
 				</table>
 			</div>
-		<div class="clear"></div>
+			<div class="clear"></div>
 	);
 
 	print qq(<div class="trees_wrapper">);
@@ -249,8 +238,10 @@ sub print_home {
 	
 	print qq(
 			</div> <!-- .trees_wrapper -->
+			<div class="clear"></div>
 		</div>
 	</div>	
+	<div class="clear"></div>			
 </div> <!-- .container_12 -->
 );
 
@@ -259,15 +250,11 @@ sub print_home {
 ########################################################################
 sub print_footer {
 	print qq (
-
     <!--  Отсюдова начинается подвал сайта!!!!! -->	
 	<div class="clear"></div>
-	<div class="page-buffer"></div>
     <div id="site_info">
-        <p>
-            Copyright <a href="#">Mysin Ivan</a>. Все права защищены.
-        </p>
-    </div><!--wrapper end-->
+        <p>Copyright <a href="#">Mysin Ivan</a>. Все права защищены. </p>
+    </div>
 
 </body>
 </html>
@@ -304,13 +291,10 @@ sub print_add_record {
                                 <input type="text" id="datepicker" name="date"  />
                             </td>
                             <script>
-                            \$.datepicker.regional["ru"];
-  							 \$(function() {
-								\$( "#datepicker" ).datepicker({ dateFormat: 'dd/mm/yy'});
-							});
+								\$( "#datepicker" ).datepicker();
 							</script>
                         </tr>	  
-
+						<!--
                         <tr>
                             <td>
                                 <label>Пол животного</label>
@@ -322,7 +306,7 @@ sub print_add_record {
                                 Female
                             </td>
                         </tr>
-
+						-->
                         <tr>
                             <td>
                                 <label> Выберите эксперимнтальную серию </label>
@@ -583,8 +567,16 @@ sub print_records {
 		print qq(			<td>$t->{'series_name'}</td>\n);
 		print qq(			<td>$t->{'group_name'}</td>\n);
 		print qq(			<td>$t->{'description'}</td>\n);
-		print qq(			<td><a href="?view=edit_record&record_id=$t->{'records_id'}" class="edit_ref">Редактировать</a></td>\n);
-		print qq(			<td><a href="?view=delete_record&record_id=$t->{'records_id'}" class="delete_ref">Удалить</a></td>\n);
+		if ($t->{"access_type"} eq "host" or $t->{"access_type"} eq "write") {
+			print qq(			<td><a href="?view=edit_record&record_id=$t->{'records_id'}" class="edit_ref">Редактировать</a></td>\n);
+		} else {
+			print qq(			<td> Доступ к редактированию закрыт </td>\n);
+		}
+		if ($t->{"access_type"} eq "host") {
+			print qq(			<td><a href="?view=delete_record&record_id=$t->{'records_id'}" class="delete_ref">Удалить</a></td>\n);
+		} else {
+			print qq(			<td>Доступ к удалению закрыт</td>\n);
+		}
 		print qq(		</tr>);
 	};
 	print qq(
@@ -627,9 +619,20 @@ sub print_groups {
 							<td>$t->{'name'}</td>
 							<td>$t->{'series_name'}</td>
 							<td>$t->{'description'}</td>
-							<td><a href="?view=edit_group&group_id=$t->{'id'}" class="edit_ref">Редактировать</a></td>
-							<td><a href="?view=delete_group&group_id=$t->{'id'}" class="delete_ref">Удалить</a></td>
-					</tr>);
+				);
+		if ( $t->{"access_type"} eq "host" or $t->{"access_type"} eq "write" ) { 		
+			print qq(				<td><a href="?view=edit_group&group_id=$t->{'id'}" class="edit_ref">Редактировать</a></td>);
+		} else {
+			print qq(				<td>  Доступ к редактированию закрыт </td>);
+		}
+		
+		if ( $t->{"access_type"} eq "host") { 		
+			print qq(				<td><a href="?view=delete_group&group_id=$t->{'id'}" class="delete_ref">Удалить</a></td>);
+		} else {
+			print qq(				<td>  Доступ к удалению закрыт </td>);
+		}
+							
+		print qq(			</tr>);
 	};
 	print qq(
 					</tbody>
@@ -753,18 +756,21 @@ sub print_edit_record {
                                 <select id="select" name="series"  style="width: 300px">
                             );
 	
+	
 	foreach my $ser (@{$series}) {
+		
 		print qq(		<optgroup label="$ser->{'name'}">\n);
-			foreach my $group (@{$groups}) {
-				if ($group->{'parent_seria_id'} ne $ser->{'series_id'}) {
-					next;
-				};
-				if ($record->{'sub_series_id'} == $group->{'id'} and $record->{'series_id'} == $ser->{'series_id'}) {
-					print qq(<option value="$ser->{'series_id'}|$group->{'id'}" selected> $group->{'name'}</option>);
-				} else {
-					print qq(<option value="$ser->{'series_id'}|$group->{'id'}"> $group->{'name'}</option>);
-				}
-			 
+
+		foreach my $group (@{$groups}) {
+
+			if ($group->{'parent_seria_id'} ne $ser->{'series_id'}) {
+				next;
+			};
+			if ($record->{'sub_series_id'} eq $group->{'id'} and $record->{'series_id'} == $ser->{'series_id'}) {
+				print qq(<option value="$ser->{'series_id'}|$group->{'id'}" selected> $group->{'name'} </option>);
+			} else {
+				print qq(<option value="$ser->{'series_id'}|$group->{'id'}"> $group->{'name'} </option>);
+			}
 		}
 		print qq(		</optgroup> \n );
 	};
@@ -1063,7 +1069,7 @@ sub print_processing {
 ########################################################################
 sub print_processed_data {
 	my $data = shift;
-	
+	my $access = shift;
 	my $css_file = CSS_FILES_MODULES_DIR.$data->{"processed_data"}->{'css_file'};
 	print qq(
 	<!-- Тута заканчивается левый бар и начинается оснавная часть !!!!  -->
@@ -1074,20 +1080,20 @@ sub print_processed_data {
 			<script type="text/javascript">
 			</script>
 			<div id="menu_of_linked_nodes">);
-			
-	foreach my $t (@{$data->{"targets"}}) {
-		print qq(
-		<form class="button_top_menu" method="POST">
-				<input type="hidden" name="processing_node_id" value="$data->{"processed_data"}->{'processing_node_id'}"   />
-				<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
-				<input type="hidden" name="parent_processing_node_id" value="$data->{"processed_data"}->{"parent_processing_node_id"}" />
-				<input type="hidden" name="after_processing" value="1">
-				<input type="hidden" name="view" value="processing" />
-				<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
-			</form>
-		);	
+	if ($access eq "host" or $access eq "write") {		
+		foreach my $t (@{$data->{"targets"}}) {
+			print qq(
+			<form class="button_top_menu" method="POST">
+					<input type="hidden" name="processing_node_id" value="$data->{"processed_data"}->{'processing_node_id'}"   />
+					<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
+					<input type="hidden" name="parent_processing_node_id" value="$data->{"processed_data"}->{"parent_processing_node_id"}" />
+					<input type="hidden" name="after_processing" value="1">
+					<input type="hidden" name="view" value="processing" />
+					<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
+				</form>
+			);	
+		}
 	}
-	
 	print qq(
 			</div> <!-- #menu_of_linked_nodes -->
 			</br>
@@ -1126,6 +1132,7 @@ sub print_authorization {
 			<a href="?view=registration"> Регистрация </a>
 		</div>
 	  </section>
+	</div>
 	);
 }
 ########################################################################

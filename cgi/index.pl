@@ -220,22 +220,31 @@ switch ($view) {
 			$processed_html_code = &clear($_getpost{'processed_html_code'});
 			$processed_param = &clear($_getpost{'processed_params'});
 		}
-			
-		my $processing_node_id = &create_new_processing_node($parent_processing_node_id, $reg_path_id, $record_id, $processed_html_code, $processed_param, $after_processing);
-		# Тут нужно будет исправить, потому, что мы сначала пишем в базу, а потом читаем эту же информацию !!!!! 
-		my $proccessing = &get_processing_data($processing_node_id);
-		my $registrated_data = &get_registrated_data($reg_path_id);
-		my $target_nodes = &get_target_nodes($reg_path_id);
 		
-		
-		&print_processing($proccessing, $registrated_data, $target_nodes, $parent_processing_node_id, $record_id, $reg_path_id);
+		my $access = &verify_user_acceess_to_processing_node($parent_processing_node_id, $record_id);
+		if ( $access eq "host" or $access eq "write" ) {
+			my $processing_node_id = &create_new_processing_node($parent_processing_node_id, $reg_path_id, $record_id, $processed_html_code, $processed_param, $after_processing);
+			# Тут нужно будет исправить, потому, что мы сначала пишем в базу, а потом читаем эту же информацию !!!!! 
+			my $proccessing = &get_processing_data($processing_node_id);
+			my $registrated_data = &get_registrated_data($reg_path_id);
+			my $target_nodes = &get_target_nodes($reg_path_id);
+     		&print_processing($proccessing, $registrated_data, $target_nodes, $parent_processing_node_id, $record_id, $reg_path_id);
+		} else {
+			print "Доступ запрещен";
+		}	
+
 	
 	}
 	
 	case ("get_processed") {
 		my $processing_node_id = int($_getpost{"processing_node_id"});
-		my $processed_data = &get_processed_data($processing_node_id);
-		&print_processed_data($processed_data);
+		my $access = &verify_user_acceess_to_processing_node($processing_node_id);
+		if ( $access eq "host" or $access eq "write" or $access eq "read") {
+			my $processed_data = &get_processed_data($processing_node_id);
+			&print_processed_data($processed_data, $access);
+		} else {
+			print "Доступ запрещен";
+		}
 	}
 	
 	else {

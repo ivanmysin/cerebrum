@@ -178,13 +178,14 @@
 	-ms-touch-action: none;
 	touch-action: none;
 }
+/*
 .ui-accordion .ui-accordion-header {
 	display: block;
 	cursor: pointer;
 	position: relative;
 	margin: 2px 0 0 0;
 	padding: .5em .5em .5em .7em;
-	min-height: 0; /* support: IE7 */
+	min-height: 0; /* support: IE7 /
 	font-size: 100%;
 }
 .ui-accordion .ui-accordion-icons {
@@ -204,6 +205,7 @@
 	border-top: 0;
 	overflow: auto;
 }
+*/ 
 .ui-autocomplete {
 	position: absolute;
 	top: 0;
