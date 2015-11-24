@@ -8,8 +8,9 @@ use JSON::XS;
 
 print "Content-Type: text/html charset=utf-8\n\n";
 
-my $a = "abcd";
+my $a = random(10);
 
-$a = substr($a, 0, -2);
+$a = rint(100*$a)/100;
 
-print $a; 
+
+print $a;

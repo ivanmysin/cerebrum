@@ -1055,6 +1055,7 @@ sub print_processing {
             <div id="procc_container">
 				$html_code
             </div> <!-- #procc_container -->
+            <div class="clear"> </div>
             <script src="$js_file" type="text/javascript"></script>
             <script src="${js_fir}processing.js" type="text/javascript"></script>
 
@@ -1063,6 +1064,9 @@ sub print_processing {
 	print qq(
 		</div> <!-- .box round first-->
 	</div>	<!-- .grid_10 -->
+	<div class="clear"> </div>
+</div> <!-- .container12 -->
+
 	);
 }
 
@@ -1084,13 +1088,13 @@ sub print_processed_data {
 		foreach my $t (@{$data->{"targets"}}) {
 			print qq(
 			<form class="button_top_menu" method="POST">
-					<input type="hidden" name="processing_node_id" value="$data->{"processed_data"}->{'processing_node_id'}"   />
-					<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
-					<input type="hidden" name="parent_processing_node_id" value="$data->{"processed_data"}->{"parent_processing_node_id"}" />
-					<input type="hidden" name="after_processing" value="1">
-					<input type="hidden" name="view" value="processing" />
-					<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
-				</form>
+				<input type="hidden" name="processing_node_id" value="$data->{"processed_data"}->{'processing_node_id'}"   />
+				<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
+				<input type="hidden" name="parent_processing_node_id" value="$data->{"processed_data"}->{"parent_processing_node_id"}" />
+				<input type="hidden" name="after_processing" value="1">
+				<input type="hidden" name="view" value="processing" />
+				<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
+			</form>
 			);	
 		}
 	}
@@ -1099,14 +1103,14 @@ sub print_processed_data {
 			</br>
             <div id="procc_container">
 
-				$data->{"processed_data"}->{"html_processed_code"}e
+				$data->{"processed_data"}->{"html_processed_code"}
             
             </div> <!-- #procc_container -->
 		</div> <!-- .box round first-->
 	</div>	<!-- .grid_10 -->
+</div> <!-- .container12 -->
 	
-	
-	 );
+	);
 	
 }
 ########################################################################

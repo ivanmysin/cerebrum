@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-print "Content-Type: text/html charset=utf-8\n\n";
+print "Content-Type: text/html \n\n"; # charset=utf-8 
 
 use warnings;
 use strict;
@@ -30,15 +30,9 @@ if (not ($access eq "host" or $access eq "write")) {
 
 
 my $regime = $_getpost{'regime'};
-
-
-
 my $sources_file = $_getpost{'source_file'}; 
-
 my $target_file = $_getpost{'target_file'};
-
 my $data =  matlab_read($sources_file); 
-
 
 my $server_params = from_json($_getpost{"server_json_params"});
 
@@ -54,8 +48,8 @@ switch ($regime) {
 		my $title = 'Potential';
 		for (my $i=0; $i<$nchs; $i++) {
 			my $ch = $data(0:$intT, $i);
-			$ch = ($ch - min($ch)) / (max($ch) - min($ch));
-			my $t = sequence(nelem($ch)) / $fd;
+			$ch = rint(100 * ( ($ch - min($ch)) / (max($ch) - min($ch)) ) )/100;
+			my $t = rint(1000*sequence(nelem($ch)) / $fd) / 1000;
 			my @x = list ($t);
 			my @y = list ($ch);
 			my $xref = \@x;
@@ -76,7 +70,7 @@ switch ($regime) {
 			$send_array[$i] = \%hash;
 		}
 		my $json = JSON->new->utf8->encode(\@send_array);
-		print $json;
+		print ($json);
 	}
 	
 	

@@ -55,16 +55,18 @@ $(document).ready(function(){
 			'record_id': App.record_id,
 		}; 
 		
-		$.ajax({
+		var statusObj = $.ajax({
 			url: App.server_script,  
 			type: 'get',
 			data: data,
 			cache: false,
 			dataType: "text",
-			obj: eventObj,   
+			async: false,
 			success: function(returned) {
+						// this.responseText = returned;
 						if (returned != "success") {
-							console.log(returned); 
+							alert("Произошла ошибка при запросе на сервере (Подробности в консоли)");
+							console.log(returned);
 						};
 					},				
 			error: function(returned) {
@@ -72,8 +74,10 @@ $(document).ready(function(){
 						alert('Произошла ошибка при запросе на сервере (Подробности в консоли)');
 					},
 		});
-		
-		// return false;
+
+		if (statusObj.responseText != "success") {
+			eventObj.preventDefault();
+		}
 
 	});
 	/////////////////////////////////////////////////////////////////////////////////

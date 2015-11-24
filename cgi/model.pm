@@ -551,7 +551,7 @@ sub get_ajax_script_param {
 					INNER JOIN registrated_nodes ON 
 						registrated_nodes.id=processing_nodes.id_registrated_node
 					WHERE processing_nodes.id = $parent_processing_node_id";
-
+		# print $query;
 		@sourse = &mysql_select_query($query);
 	}
 	my $query = "SELECT registrated_nodes.directory_of_mat_files AS target_file_dir, 
@@ -677,7 +677,7 @@ sub get_processed_data {
 	my @res = &mysql_select_query($query);
 	
 	my $query_top_menu = qq(
-		SELECT reg_nodes_connections.id AS path_id, registrated_nodes.name 
+		SELECT reg_nodes_connections.id AS path_id, reg_nodes_connections.name 
 			FROM reg_nodes_connections INNER JOIN registrated_nodes ON registrated_nodes.id = reg_nodes_connections.target_reg_node_id 
 		WHERE reg_nodes_connections.origin_reg_node_id = 
 			(SELECT processing_nodes.id_registrated_node FROM processing_nodes WHERE processing_nodes.id = $processing_node_id)
@@ -697,19 +697,22 @@ sub save_node_state {
 }
 ########################################################################
 # Функция сохраняет параметры, обрабатывающиеся на стороне сервера
-# Эти функции тут, поскольку не получилось подключить model в файлах обработки
 sub save_param {
 	my $node_id = shift;
 	my $param_ref = shift;
 	my $statistics = shift;
 	$statistics = defined($statistics) ? $statistics : "Statistics is not defined";
 	$statistics  = &clear($statistics);
+	print_log("ok");
 	my $param = &clear(JSON->new->utf8(0)->encode($param_ref));
+	print_log($param);
 	my $query = "UPDATE processing_nodes SET server_json_params=$param, statistics=$statistics WHERE id=$node_id";
+	my $res = &mysql_other_query($query);
 	
-	my $sth = $dbh->prepare($query);
-	my $res = $sth->execute();
-	$sth->finish();
+	#$query = "SELECT server_json_params FROM processing_nodes WHERE id=$node_id";
+	#my @res = &mysql_select_query($query);
+	#print("Получили из БД ".$res->[0]->{"server_json_params"}); #
+	
 	return $res;
 }
 

@@ -170,7 +170,7 @@ sub get_hist {
 	my $spike_train = shift;
 	my $bin = shift;
 	my $order = shift;
-	$order = defined($order) ? $order : 1;
+	$order = ($order < nelem($spike_train)-1) ? $order : 1;
 	my $intervals = $spike_train($order:-1) - $spike_train(0:-$order-1);
 
 	my $kv = sprintf("%0.2f", sqrt(var_unbiased($intervals))/avg($intervals));# $kv is kofficient of variance of intervals

@@ -36,7 +36,6 @@ my $sources_file = $_getpost{'source_file'};
 my $target_file = $_getpost{'target_file'};
 my $regime = $_getpost{'regime'};
 
-my $params = $_getpost{'processed_params'};
 my $server_params = from_json($_getpost{"server_json_params"});
 my $fd = $server_params->{'fd'}; # $fd is discritisation frequency of wav data
 
@@ -81,11 +80,13 @@ switch ($regime) {
 		}
 		my $json = JSON->new->utf8->encode(\@send_array);
 		print $json;
-		exit;
+		
 	}
 	
 	case("write") {
-		
+		my $params = $_getpost{'client_json_params'};
+
+
 		my $processing_params = JSON->new->utf8(0)->decode($params); # !!!! Надо бы сделать верификацию данных, сейчас верификация происходит только на стороне клиента с помощью Javascript !!!!!!!! 
 	
 		my @st_levels = @{$processing_params->{'st_threshold_line'}}; # Каждый элемент в этом массиве содержит пороги для дискриминации одного канала
@@ -178,7 +179,6 @@ switch ($regime) {
 
 
 			my $n_levels = scalar(@levels1) + scalar(@levels2) - 1;
-
 			
 			my $t_min = 0;
 			my $t_max;
@@ -269,8 +269,8 @@ switch ($regime) {
 			
 			
 			${$data_header}[$i] -> {"stim"} = {
-					"low_ind" => $low_ind,
-					"upper_ind" => $upper_ind,
+				"low_ind" => $low_ind,
+				"upper_ind" => $upper_ind,
 			};
 			
 			

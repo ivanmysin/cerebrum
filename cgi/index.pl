@@ -231,7 +231,7 @@ switch ($view) {
      		&print_processing($proccessing, $registrated_data, $target_nodes, $parent_processing_node_id, $record_id, $reg_path_id);
 		} else {
 			print "Доступ запрещен";
-		}	
+		}
 
 	
 	}

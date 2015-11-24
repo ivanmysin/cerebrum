@@ -1,13 +1,11 @@
 #!/usr/bin/perl -w
 use warnings;
-
 use strict;
-
 use PDL;
 use PDL::NiceSlice;
-use index_lib; 
 use PDL::IO::Matlab;
 use Switch;
+use JSON;
 use im_pdl;
 use index_lib;
 use model;
@@ -23,18 +21,22 @@ print "Content-Type: text/html charset=utf-8\n\n";
 our $_session;
 
 my $processing_node_id = int($_getpost{'processing_node_id'});
+my $reg_path_id = int($_getpost{'registrated_path_id'});
+my $parent_processing_node_id = int($_getpost{'parent_processing_node_id'});
+my $record_id = int($_getpost{'record_id'});
 my $access = &verify_user_acceess_to_processing_node($processing_node_id);
 if (not ($access eq "host" or $access eq "write")) {
 	print "Access denied";
 	exit();
 }
+sleep(1);
+my $processing_parameters = &get_ajax_script_param($processing_node_id, $reg_path_id, $parent_processing_node_id, $record_id);
 
-my $sources_file = $_getpost{'source_file'}; 
-my $target_file = $_getpost{'target_file'};
+my $sources_file = MAT_FILES_DIR.$processing_parameters->{'source_file_dir'}.$processing_parameters->{'sourse_file'};
+my $target_file = MAT_FILES_DIR.$processing_parameters->{'target_file_dir'}.$processing_parameters->{'target_file'};
 my $regime = $_getpost{'regime'};
 
-
-my $server_params = &cut_end_qouts($_getpost{"server_json_params"});
+my $server_params = $processing_parameters->{"server_json_params"}; # &cut_end_qouts(
 $server_params = from_json($server_params);
 my $data = matlab_read($sources_file);
 
