@@ -1,4 +1,6 @@
 
+
+use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use Data::Dumper;
@@ -43,7 +45,7 @@ sub set_config {
 	use constant HTML_TEMPLATES_DIR => "../www/html_template/";
 	
 	my $db = "cerebrum";               # data base
-	my $db_user = "root";              # user of db
+	my $db_user = "cerebrum";          # user of db
 	my $password = "vinogradova";      # password for db
 	my $host = "localhost";            # host of db
 	

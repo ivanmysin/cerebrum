@@ -1,1 +1,0 @@
-'{\"sourse_file\":\"75.wav\",\"fd\":\"4000\",\"origin_file\":\"75_208.mat\",\"nchs\":\"2\"}'

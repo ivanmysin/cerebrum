@@ -164,6 +164,11 @@ switch ($regime) {
 		&save_param($processing_node_id, $data_header, $statistics);
 		
 	}
+	
+	case ("write") {
+		print "success";
+	}
+	
 	case ("save") {
 		print "success";
 	}

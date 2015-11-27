@@ -1,3 +1,6 @@
+
+
+use lib ("/home/ivan/perl5/lib/perl5/");
 use PDL::Lite;
 use PDL::NiceSlice;
 use JSON;
@@ -135,56 +138,56 @@ return @sers;
 
 ########################################################################
 
-sub burst {
-use PDL::Stats::Kmeans;
-my $sp=shift;
-my $aut_param=shift;
-my $int=$sp(1:-1)-$sp(0:-2);
-my $burst;
-my $minsp;
-my $hb=$sp(-1);
-my $lb=$sp(0); 
-if ($aut_param eq 'on') {     
-  my %clus=$int->kmeans({NCLUS=>2});
-  my $inds=qsorti($clus{centroid});
-  $burst=$clus{cluster};
-  $burst=$burst(,$inds(0));
-  $burst=$burst->clump(2);
-  shift;
-  $minsp=shift; # !!!! нужно написать определение максимального колличества спайков в пачке
-} else {
-  my $max_interspike_gap=shift;
-  $minsp=shift;
-  my $min_nums_sp_burst=shift;
-  my $r=$int->where($int>$max_interspike_gap); # this code is nessecery for removal in intermidiate values
-  $r=$r->where($r<$min_interburst_gap);        #
-  $r.=4;                                       #
-  my $t=which($int<=$max_interspike_gap);  # burst_intervals is interburst intervals
-  $int($t).=1;
-  $t=which($int>=$min_interburst_gap);
-  $int($t).=0;
-  $burst=byte($int);
-}
-my $d=$burst(1:-1)-$burst(0:-2);
-my $fs=which($d==1);  # st is piddle indexes of fist spikes in each burst
-my $ls=which($d==255); # ls is piddle indexes of last spikes in each burst
-my $p=$ls-$fs;
-$p=which($p>$minsp);
-$fs=$fs($p);
-$ls=$ls($p);
-$fs++;
-$ls++;
-my $nburst=nelem($fs); # $nburst is numbers of bursts in sample
-my $frb=$nburst/($hb-$lb); # $frb is mean frequency of bursts
-my $mnsp=$ls-$fs; # $mnsp is mean numbers spikes in burst
-$mnsp++;
-$mnsp=avg($mnsp);
-my $mlburst=$sp($ls)-$sp($fs); # $mlburst is mean leng of burst
-$mlburst=avg($mlburst);
-my $mfrburst=$mnsp/$mlburst;  # mfrburs is mean friquency in burst
-my $mintburst=avg($sp($fs(1:-1))-$sp($ls(0:-2))); # $mintburst is mean interburst interval
-return ($nburst,$frb,$mnsp,$mlburst,$mfrburst,$mintburst);
-}
+# sub burst {
+# use PDL::Stats::Kmeans;
+# my $sp=shift;
+# my $aut_param=shift;
+# my $int=$sp(1:-1)-$sp(0:-2);
+# my $burst;
+# my $minsp;
+# my $hb=$sp(-1);
+# my $lb=$sp(0); 
+# if ($aut_param eq 'on') {     
+  # my %clus=$int->kmeans({NCLUS=>2});
+  # my $inds=qsorti($clus{centroid});
+  # $burst=$clus{cluster};
+  # $burst=$burst(,$inds(0));
+  # $burst=$burst->clump(2);
+  # shift;
+  # $minsp=shift; # !!!! нужно написать определение максимального колличества спайков в пачке
+# } else {
+  # my $max_interspike_gap=shift;
+  # $minsp=shift;
+  # my $min_nums_sp_burst=shift;
+  # my $r=$int->where($int>$max_interspike_gap); # this code is nessecery for removal in intermidiate values
+  # $r=$r->where($r<$min_interburst_gap);        #
+  # $r.=4;                                       #
+  # my $t=which($int<=$max_interspike_gap);  # burst_intervals is interburst intervals
+  # $int($t).=1;
+  # $t=which($int>=$min_interburst_gap);
+  # $int($t).=0;
+  # $burst=byte($int);
+# }
+# my $d=$burst(1:-1)-$burst(0:-2);
+# my $fs=which($d==1);  # st is piddle indexes of fist spikes in each burst
+# my $ls=which($d==255); # ls is piddle indexes of last spikes in each burst
+# my $p=$ls-$fs;
+# $p=which($p>$minsp);
+# $fs=$fs($p);
+# $ls=$ls($p);
+# $fs++;
+# $ls++;
+# my $nburst=nelem($fs); # $nburst is numbers of bursts in sample
+# my $frb=$nburst/($hb-$lb); # $frb is mean frequency of bursts
+# my $mnsp=$ls-$fs; # $mnsp is mean numbers spikes in burst
+# $mnsp++;
+# $mnsp=avg($mnsp);
+# my $mlburst=$sp($ls)-$sp($fs); # $mlburst is mean leng of burst
+# $mlburst=avg($mlburst);
+# my $mfrburst=$mnsp/$mlburst;  # mfrburs is mean friquency in burst
+# my $mintburst=avg($sp($fs(1:-1))-$sp($ls(0:-2))); # $mintburst is mean interburst interval
+# return ($nburst,$frb,$mnsp,$mlburst,$mfrburst,$mintburst);
+# }
 ########################################################################
 
 sub find_hist {
@@ -222,30 +225,30 @@ my $amps=$pdl($lmax_ind)-$pdl($lmin_ind);
 return ($amps,$lmax_ind);
 }
 ########################################################################
-sub cutstims {
-use PDL::Stats::Basic;
-my $stims=shift;
-my $msi=$stims(1:-1)-$stims(0:-2); #msi - array of interstim intervals
-my $n=nelem($stims);
-my $z=0;
-my $j;
-my $st; #=pdl;
-my @sers=(); # array of array, which contains coordinats of series stimulation
-for (my $i=0; $i<($n-1); $i++) {
-	my $kof=0;
-		for ($j=1; ($kof<1) and ($j<($n-$i-1)); $j++) {
-		$kof=ss($msi($i:$i+$j));
-		}
-	$st=$stims($i:($i+$j-1));
-	$sers[$z]=$st;
-	$z++;
-	$i=$i+$j-1;
-	if (nelem($st)<6) {
-		$z--
-		}
-	}
-return @sers;
-}
+# sub cutstims {
+# use PDL::Stats::Basic;
+# my $stims=shift;
+# my $msi=$stims(1:-1)-$stims(0:-2); #msi - array of interstim intervals
+# my $n=nelem($stims);
+# my $z=0;
+# my $j;
+# my $st; #=pdl;
+# my @sers=(); # array of array, which contains coordinats of series stimulation
+# for (my $i=0; $i<($n-1); $i++) {
+	# my $kof=0;
+		# for ($j=1; ($kof<1) and ($j<($n-$i-1)); $j++) {
+		# $kof=ss($msi($i:$i+$j));
+		# }
+	# $st=$stims($i:($i+$j-1));
+	# $sers[$z]=$st;
+	# $z++;
+	# $i=$i+$j-1;
+	# if (nelem($st)<6) {
+		# $z--
+		# }
+	# }
+# return @sers;
+# }
 ########################################################################
 sub f_sers2 {
 my $stims=shift;

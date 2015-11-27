@@ -2,7 +2,7 @@
 
 # this script is point of enter in application
 
-
+use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use Switch;

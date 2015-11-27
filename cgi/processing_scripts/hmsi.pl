@@ -3,7 +3,7 @@
 print "Content-Type: text/html charset=utf-8\n\n";
 use warnings;
 use strict;
-
+use lib ("/home/ivan/perl5/lib/perl5/");
 use PDL;
 use PDL::NiceSlice;
 use index_lib; 
@@ -172,8 +172,8 @@ sub get_hist {
 	my $order = shift;
 	$order = ($order < nelem($spike_train)-1) ? $order : 1;
 	my $intervals = $spike_train($order:-1) - $spike_train(0:-$order-1);
-
-	my $kv = sprintf("%0.2f", sqrt(var_unbiased($intervals))/avg($intervals));# $kv is kofficient of variance of intervals
+	my ($mean,$prms,$median,$min,$max,$adev,$rms) = stats($intervals);
+	my $kv = sprintf("%0.2f", sqrt($rms/$mean));# $kv is kofficient of variance of intervals
 	my $hist = double ( histogram($intervals, $bin, 0,  int( max($intervals)/$bin)+1 ) ) / nelem ($intervals); 
 	my $x = sequence(nelem ($hist) ) * $bin;
 	return $kv, $hist, $x;

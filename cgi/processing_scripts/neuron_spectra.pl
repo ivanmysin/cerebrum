@@ -3,11 +3,10 @@
 print "Content-Type: text/html charset=utf-8\n\n";
 use warnings;
 use strict;
-
+use lib ("/home/ivan/perl5/lib/perl5/");
 use PDL;
 use PDL::NiceSlice;
 use PDL::FFT;
-use index_lib; 
 use PDL::IO::Matlab;
 use Switch;
 use im_pdl;
@@ -21,6 +20,7 @@ use model;
 our %_getpost;
 &start_session();
 our $_session;
+
 
 
 my $processing_node_id = int($_getpost{'processing_node_id'});
@@ -154,6 +154,14 @@ switch ($regime) {
 		my $processing_node_id = int($_getpost{'processing_node_id'});
 		my $statistics = &get_statistics($data_header);
 		&save_param($processing_node_id, $data_header, $statistics);
+	}
+	
+	case ("write") {
+		print "success";
+	}
+	
+	case ("save") {
+		print "success";
 	}
 
 	else {

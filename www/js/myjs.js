@@ -35,16 +35,19 @@ $(document).ready(function(){
 
 	$("#menu_of_linked_nodes .button_top_menu").submit(function(eventObj){
 		var processed_html = $("#procc_container").html();
-		var proc_html_input = "<textarea name=\"processed_html_code\" style=\"display:none;\"> " + processed_html + "</textarea>";
+		
+		// var proc_html_input = "<textarea name=\"processed_html_code\" style=\"display:none;\"> " + processed_html + "</textarea>";
 		// Тут нужно вставлять не во все, а только в одну !!!!!!!
 		
 		
-		$(this).prepend(proc_html_input);
+		$(this).find("textarea[name=processed_html_code]").text(processed_html);
+		
+
 		var processedParams = JSON.stringify(App.params); // App.params - стуктура, которая хранит параметры, полученные от пользователя и предназначеные для отправления 
 	                                                      //  на сервер как параметы  для запуска следующего скрипта
 	                                                      
-		var processedParamsHtmlCode =  "<textarea name=\"processed_params\" style=\"display:none;\"> " + processedParams + "</textarea>";
-		$(this).prepend(processedParamsHtmlCode);
+		// var processedParamsHtmlCode =  "<textarea name=\"processed_params\" style=\"display:none;\"> " + processedParams + "</textarea>";
+		$(this).find("textarea[name=processed_params]").text(processedParams);
 		
 		var data = {
 			'processing_node_id':  App.processing_node_id, 

@@ -1,4 +1,6 @@
 # model 
+
+use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use JSON;

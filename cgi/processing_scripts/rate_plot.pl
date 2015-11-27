@@ -1,4 +1,5 @@
 #!/usr/bin/perl -w
+use lib ("/home/ivan/perl5/lib/perl5/");
 use warnings;
 use strict;
 use PDL;

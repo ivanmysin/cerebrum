@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
-use warnings;
 
+use lib ("/home/ivan/perl5/lib/perl5/");
+use warnings;
 use strict;
 
 use PDL;
@@ -51,7 +52,7 @@ $regime = ($regime eq "save") ? "write" : $regime;
 switch ($regime) {
 	case("read") {
 		$data = double($data); 
-		my $intT = 10000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Эта цифра тут для ограничения информации, передаваемой в браузер, 
+		my $intT = 1000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Эта цифра тут для ограничения информации, передаваемой в браузер, 
 		                  #   в окончательном варианте нужно убрать или поставить -1 !!!!!!!!!!!!!!!!!!!!!!!!! #
 		my @send_array;
 		my $title = 'Potential';
@@ -84,8 +85,7 @@ switch ($regime) {
 	}
 	
 	case("write") {
-		my $params = $_getpost{'client_json_params'};
-
+		my $params = $_getpost{'processed_params'};
 
 		my $processing_params = JSON->new->utf8(0)->decode($params); # !!!! Надо бы сделать верификацию данных, сейчас верификация происходит только на стороне клиента с помощью Javascript !!!!!!!! 
 	

@@ -1,6 +1,6 @@
 
 # this is view 
-
+use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use JSON;
@@ -1032,6 +1032,8 @@ sub print_processing {
 				<input type="hidden" name="registrated_path_id" value="$t->{'path_id'}"   />
 				<input type="hidden" name="parent_processing_node_id" value="$parent_processing_node_id" />
 				<input type="hidden" name="view" value="processing"   />
+				<textarea name="processed_html_code" style="display:none;"> </textarea>
+                <textarea name="processed_params" style="display:none;"> </textarea>
 				<button class="btn btn-teal node_button" type="submit"> $t->{'name'} </button>
 			</form>		
 		);

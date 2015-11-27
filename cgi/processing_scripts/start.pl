@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 print "Content-Type: text/html \n\n"; # charset=utf-8 
 
+use lib ("/home/ivan/perl5/lib/perl5/");
 use warnings;
 use strict;
 use JSON;
@@ -10,7 +11,8 @@ use PDL::Audio;
 use PDL::IO::Matlab;
 use Switch;
 
-use im_pdl;
+
+# use im_pdl;
 use index_lib; 
 use model;
 
