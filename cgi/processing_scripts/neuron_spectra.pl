@@ -22,7 +22,6 @@ our %_getpost;
 our $_session;
 
 
-
 my $processing_node_id = int($_getpost{'processing_node_id'});
 my $access = &verify_user_acceess_to_processing_node($processing_node_id);
 if (not ($access eq "host" or $access eq "write")) {
@@ -231,19 +230,19 @@ sub get_statistics {
 	for (my $i=0; $i<@{$data->{"data"}}; $i++) {
 		$stat .= qq(
 			<div class="neuron_spectra_stat_channel_presentation">
-			<p> Канал: $data->{"data"}->[$i]->{"channel_name"} </p>
+			<p> Channel: $data->{"data"}->[$i]->{"channel_name"} </p>
 		);
 		for (my $j=0; $j<@{$data->{"data"}->[$i]->{"neurons"}}; $j++ ) {
 			my $neuron_num = $j + 1;
 			$stat .= qq(
 			<div class="neuron_spectra_stat_neurons_presentions">
 				<table class="neuron_spectra_stat_effects_table">
-					<caption> Нейрон № $neuron_num </caption>
+					<caption> Channel # $neuron_num </caption>
 					<tr>
-						<th> Эффект </th>
-						<th> Нижняя граница </th>
-						<th> Верхняя раница </th>
-						<th> Мода спектра </th>
+						<th> Effect </th>
+						<th> Lower bound </th>
+						<th> Upper bound </th>
+						<th> Mode frequency </th>
 					</tr>
 			);
 			

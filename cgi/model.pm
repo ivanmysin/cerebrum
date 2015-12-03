@@ -4,6 +4,7 @@ use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use JSON;
+use utf8;
 our %_getpost;
 our $_session;
 our $dbh;
@@ -436,7 +437,7 @@ sub get_home_data {
 		$t->{"parent"} = $t->{"parent"} == 0 ? "#" : $t->{"parent"};
 		
 		my $text = qq(
-		<a href=?view=get_processed&processing_node_id=$t->{"id"}> $t->{"name"} </a> 
+		<a href=?view=processed_node&processing_node_id=$t->{"id"}> $t->{"name"} </a> 
 
 		);
 		# 		<div class="node_statistics"> $t->{"statistics"} </div>
@@ -700,21 +701,16 @@ sub save_node_state {
 ########################################################################
 # Функция сохраняет параметры, обрабатывающиеся на стороне сервера
 sub save_param {
+	$dbh->do("set character set utf8");
+	$dbh->do("set names utf8");
 	my $node_id = shift;
 	my $param_ref = shift;
 	my $statistics = shift;
 	$statistics = defined($statistics) ? $statistics : "Statistics is not defined";
 	$statistics  = &clear($statistics);
-	print_log("ok");
 	my $param = &clear(JSON->new->utf8(0)->encode($param_ref));
-	print_log($param);
 	my $query = "UPDATE processing_nodes SET server_json_params=$param, statistics=$statistics WHERE id=$node_id";
 	my $res = &mysql_other_query($query);
-	
-	#$query = "SELECT server_json_params FROM processing_nodes WHERE id=$node_id";
-	#my @res = &mysql_select_query($query);
-	#print("Получили из БД ".$res->[0]->{"server_json_params"}); #
-	
 	return $res;
 }
 
@@ -784,7 +780,6 @@ sub update_user_profile {
 	UPDATE users SET password=$password, name=$name, patronymic=$patronymic, surname=$surname, info=$info
 		WHERE id=$user_id );
 	my $res = &mysql_other_query($query);
-	
 }
 ########################################################################
 sub verify_user_acceess_to_processing_node {
@@ -815,6 +810,65 @@ sub verify_user_acceess_to_processing_node {
 	#print $query;
 	my @res = &mysql_select_query($query);
 	return $res[0]->{"access_type"};
+}
+########################################################################
+sub get_processed_node_data {
+		my $node_id = shift;
+		my $node_data = {};
+		# get data about node
+		my $query = qq(
+				SELECT  id_parent_nodes, statistics, id_registrated_node FROM
+						processing_nodes WHERE id=$node_id
+		);
+		my @thisnode = &mysql_select_query($query);
+		$node_data->{"thisnode"} = $thisnode[0];
+		# get data about it existing children
+		$query = qq(
+				 SELECT processing_nodes.id as children_id, registrated_nodes.name
+						FROM processing_nodes INNER JOIN registrated_nodes 
+							ON registrated_nodes.id = processing_nodes.id_registrated_node
+				  WHERE processing_nodes.id_parent_nodes=$node_id;
+		);
+		
+		my @childrennodes = &mysql_select_query($query);
+		$node_data->{"children_nodes"} = \@childrennodes;
+		
+		# get data about pathways from this node
+		$query = qq(
+				SELECT id as path_id, name 	FROM reg_nodes_connections 
+						WHERE origin_reg_node_id = $node_data->{"thisnode"}->{"id_registrated_node"}
+		);
+		my @pathways = &mysql_select_query($query);
+		$node_data->{"pathways"} = \@pathways;
+		return $node_data;
+}
+########################################################################
+sub delete_node {
+
+	    use DBIx::Tree;
+		my $node_id = shift;
+	    my $query = qq(DELETE FROM processing_nodes WHERE id IN \();
+		my $tree = new DBIx::Tree (
+	    connection => $dbh,
+        table      => "processing_nodes",
+        method  => sub { delete_branch(@_) },
+        columns    => ["id", "id", "id_parent_nodes"],
+        start_id   => $node_id );
+		$tree->traverse;
+		$query = substr($query, 0, -3)  . ")";
+		
+		&mysql_other_query($query );
+
+		sub delete_branch {
+
+			for(my $i=0; $i<@_; $i++) {
+				if ($_[$i] eq "id") {
+					$query .= $_[$i+1].",  ";
+				}
+			}
+
+		}
+		
 }
 ########################################################################
 1;

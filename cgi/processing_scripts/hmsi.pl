@@ -197,24 +197,24 @@ sub get_statistics {
 		}
 		
 		</style>
-		<p> Бин для гистограмм = $data->{"bin"} </p>
-		<p> Порядок гистограмм = $data->{"order"} </p>
+		<p> Bin of histogramm = $data->{"bin"} </p>
+		<p> Order of histogramm = $data->{"order"} </p>
 	);
 	for (my $i=0; $i<@{$data->{"data"}}; $i++) {
 		$stat .= qq(
 			<div class="hmsi_stat_channel_presentation">
-			<p> Канал: $data->{"data"}->[$i]->{"channel_name"} </p>
+			<p> Channel $data->{"data"}->[$i]->{"channel_name"} </p>
 		);
 		for (my $j=0; $j<@{$data->{"data"}->[$i]->{"neurons"}}; $j++ ) {
 			my $neuron_num = $j + 1;
 			$stat .= qq(
 			<div class="hmsi_stat_neurons_presentions">
 				<table class="hmsi_stat_effects_table">
-					<caption> Нейрон № $neuron_num </caption>
+					<caption> Neuron # $neuron_num </caption>
 					<tr>
-						<th> Эффект </th>
-						<th> Нижняя граница </th>
-						<th> Верхняя раница </th>
+						<th> Effect </th>
+						<th> Lower bound </th>
+						<th> Upper bound </th>
 						<th> Kv </th>
 					</tr>
 			);

@@ -225,24 +225,24 @@ sub get_statistics {
 		}
 		
 		</style>
-		<p> Бин = $data->{"bin"} </p>
-		<p> Максимальный порядок = $data->{"maxorder"} </p>
+		<p> Bin = $data->{"bin"} </p>
+		<p> Max order $data->{"maxorder"} </p>
 	);
 	for (my $i=0; $i<@{$data->{"data"}}; $i++) {
 		$stat .= qq(
 			<div class="acg_stat_channel_presentation">
-			<p> Канал: $data->{"data"}->[$i]->{"channel_name"} </p>
+			<p> Channel: $data->{"data"}->[$i]->{"channel_name"} </p>
 		);
 		for (my $j=0; $j<@{$data->{"data"}->[$i]->{"neurons"}}; $j++ ) {
 			my $neuron_num = $j + 1;
 			$stat .= qq(
 			<div class="acg_stat_neurons_presentions">
 				<table class="acg_stat_effects_table">
-					<caption> Нейрон № $neuron_num </caption>
+					<caption> Neuron # $neuron_num </caption>
 					<tr>
-						<th> Эффект </th>
-						<th> Нижняя граница </th>
-						<th> Верхняя раница </th>
+						<th> Effect </th>
+						<th> Lower bound </th>
+						<th> Upper bound </th>
 						<th> Tau </th>
 					</tr>
 			);

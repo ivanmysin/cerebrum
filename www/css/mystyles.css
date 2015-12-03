@@ -52,7 +52,7 @@ body {
 	color: #1DB336;
 }
 
-.delete_ref {
+.delete_ref_style {
 	color: #BE1412;
 }
 
@@ -307,4 +307,15 @@ body {
 input[name=read_users], input[name=write_users], input[name=seria_name] {
 	margin:5px;
 
+}
+
+p.start {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 10px;
+}
+
+p.children_nodes_refs {
+  float:left;
+  margin: 10px;
 }

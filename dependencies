@@ -6,4 +6,5 @@ cpan install Switch
 
 cpan install JSON
 
+cpan install DBIx::Tree
 

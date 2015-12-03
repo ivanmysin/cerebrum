@@ -130,6 +130,15 @@ switch ($view) {
 		$view = "userprofile";
 	}
 	
+	case ("delete_node") {
+		my $processing_node_id = int($_getpost{'processing_node_id'});
+		my $access = &verify_user_acceess_to_processing_node($processing_node_id , 0); 
+		if ($access eq "host") {
+				&delete_node($processing_node_id);
+		};
+		$view = "home";
+	}
+	
 }
 ############################################
 #### reading from DB
@@ -245,6 +254,20 @@ switch ($view) {
 		} else {
 			print "Доступ запрещен";
 		}
+	}
+	
+	case ("processed_node") {
+		my $processing_node_id = int($_getpost{"processing_node_id"});
+		my $access = &verify_user_acceess_to_processing_node($processing_node_id , 0); 
+		if ($access eq "host" or $access eq "write" or $access eq "read") {
+			my $node_data = &get_processed_node_data($processing_node_id);
+			&print_processed_node($processing_node_id, $node_data, $access);
+		} else {
+			print "Доступ запрещен";
+		}
+		
+
+		
 	}
 	
 	else {

@@ -131,21 +131,6 @@ App.Funcs = {
 						color: App.Funcs.getRandomColor(),
 						neuron_number: neuron_number,
 					},
-					{
-						name: "Effect 2",
-						lowbound: 12,
-						upperbound:23,
-						color: App.Funcs.getRandomColor(),
-						neuron_number: neuron_number,
-					},
-					{
-						name: "Effect 3",
-						lowbound: 5,
-						upperbound:6,
-						color: App.Funcs.getRandomColor(),
-						neuron_number: neuron_number,
-					},
-
 
 				]);                                 
 				

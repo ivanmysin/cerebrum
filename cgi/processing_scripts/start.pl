@@ -123,8 +123,8 @@ sub get_statistics {
 	<table class="start_statistics_table">
 	
 		<tr>
-			<th> Частота дискретизации, Гц </th>
-			<th> Количество каналов </th>
+			<th> Discretization frequency, Hz </th>
+			<th> Channels number </th>
 		</tr>
 		<tr>
 			<td> $server_params->{"fd"} </td>

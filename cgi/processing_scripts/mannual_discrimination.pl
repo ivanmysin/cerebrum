@@ -52,7 +52,7 @@ $regime = ($regime eq "save") ? "write" : $regime;
 switch ($regime) {
 	case("read") {
 		$data = double($data); 
-		my $intT = 1000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Эта цифра тут для ограничения информации, передаваемой в браузер, 
+		my $intT = 10000; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Эта цифра тут для ограничения информации, передаваемой в браузер, 
 		                  #   в окончательном варианте нужно убрать или поставить -1 !!!!!!!!!!!!!!!!!!!!!!!!! #
 		my @send_array;
 		my $title = 'Potential';
@@ -308,7 +308,7 @@ sub get_statistics {
 		my $chnumber = $i + 1;
 		$stat .= qq(
 		<div class="mannual_discrimination_stat"  style="margin-top: 25px;">
-		<span> Канал № $chnumber </span>
+		<span> Channel  # $chnumber </span>
 		<style>
 			table.mannual_discrimination_stat_table, table.mannual_discrimination_stat_table th,  table.mannual_discrimination_stat_table tr, table.mannual_discrimination_stat_table td {
 				border: 1px solid black; 
@@ -322,12 +322,12 @@ sub get_statistics {
 		# Формируем таблицу стимуляций
 		$stat .= qq(
 		<table class="mannual_discrimination_stat_table">
-		<caption> стимуляции </caption>
+		<caption> stimulation </caption>
 		<tr>
-			<th> Начало, c </th>
-			<th> конец, c </th>
-			<th> Уровень </th>
-			<th> Сторона </th>
+			<th> start, sec</th>
+			<th> end, sec </th>
+			<th> level </th>
+			<th> side </th>
 		</tr>
 		);
 		for (my $j=0; $j<@{$data->[$i]->{'stims'}}; $j++) {
@@ -345,12 +345,12 @@ sub get_statistics {
 		# Формируем таблицу импульсов
 		$stat .= qq(
 		<table class="mannual_discrimination_stat_table">
-		<caption> Импульсы </caption>
+		<caption> spikes </caption>
 		<tr>
-			<th> Начало </th>
-			<th> конец </th>
-			<th> Уровень1 </th>
-			<th> Уровень2 </th>
+			<th> start, sec </th>
+			<th> end, sec </th>
+			<th> level 1 </th>
+			<th> level 2 </th>
 		</tr>
 		);
 		for (my $j=0; $j<@{$data->[$i]->{'stims'}}; $j++) {

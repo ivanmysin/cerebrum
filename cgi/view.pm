@@ -573,7 +573,7 @@ sub print_records {
 			print qq(			<td> Доступ к редактированию закрыт </td>\n);
 		}
 		if ($t->{"access_type"} eq "host") {
-			print qq(			<td><a href="?view=delete_record&record_id=$t->{'records_id'}" class="delete_ref">Удалить</a></td>\n);
+			print qq(			<td><a href="?view=delete_record&record_id=$t->{'records_id'}" class="delete_ref delete_ref_style">Удалить</a></td>\n);
 		} else {
 			print qq(			<td>Доступ к удалению закрыт</td>\n);
 		}
@@ -627,7 +627,7 @@ sub print_groups {
 		}
 		
 		if ( $t->{"access_type"} eq "host") { 		
-			print qq(				<td><a href="?view=delete_group&group_id=$t->{'id'}" class="delete_ref">Удалить</a></td>);
+			print qq(				<td><a href="?view=delete_group&group_id=$t->{'id'}" class="delete_ref delete_ref_style">Удалить</a></td>);
 		} else {
 			print qq(				<td>  Доступ к удалению закрыт </td>);
 		}
@@ -680,7 +680,7 @@ sub print_series {
 		}
 		
 		if ( $t->{"access_type"} eq "host") {
-			print qq(			<td><a href="?view=delete_seria&series_id=$t->{'series_id'}" class="delete_ref">Удалить</a></td>\n);
+			print qq(			<td><a href="?view=delete_seria&series_id=$t->{'series_id'}" class="delete_ref delete_ref_style">Удалить</a></td>\n);
 		} else {
 			print qq(			<td> Доступ к удалению этой серии вам закрыт </td>\n);
 		}
@@ -1110,6 +1110,7 @@ sub print_processed_data {
             </div> <!-- #procc_container -->
 		</div> <!-- .box round first-->
 	</div>	<!-- .grid_10 -->
+	<div class="clear"> </div>
 </div> <!-- .container12 -->
 	
 	);
@@ -1195,6 +1196,126 @@ sub print_userdata {
 		</div>
 	</section>
 	);
+}
+########################################################################
+sub print_processed_node {
+    my $node_id = shift;
+    my $node_data = shift;
+    my $access = shift;
+    print qq(
+    <div class="grid_10">
+        <div class="box round first">
+            <h2> Узел обработки с ID $node_id </h2>
+            <div class="box round first">
+                $node_data->{"thisnode"}->{"statistics"}
+                <p>
+                    <a href="?view=get_processed&processing_node_id=$node_id" class="btn btn-grey">Перейти к графикам</a>
+                </p>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div> <!-- /.grid_10 -->
+     <div class="grid_5">
+            <div class="box round">
+                <h2>Переход к родительскому узлу обработки </h2>
+                <div class="block">
+     );
+     if ($node_data->{"thisnode"}->{"id_parent_nodes"} != 0) {
+        print  qq(
+                    <p class="start">
+                        <a href="?view=processed_node&processing_node_id=$node_data->{"thisnode"}->{"id_parent_nodes"}" class="btn btn-grey">Перейти к родительскому узлу<a>
+                    </p>
+                );
+    } else {
+       print  qq(
+               <p class="start">
+                        У данного обработки узла нет родителя.
+                </p>
+                );
+   }
+   
+   print qq(
+   </div>
+    <div class="block">
+    <h2> Навигация по дочерним узлам обработки: </h2>
+   );
+   if ( $node_data->{"children_nodes"} ) {
+       print qq(<div style="margin:0; padding: 0: width:100%; height:100%">);
+       foreach my $t (@{$node_data->{"children_nodes"}}) {
+            print qq(
+                <p class="start children_nodes_refs">
+                    <a href="?view=processed_node&processing_node_id=$t->{"children_id"}" class="btn btn-grey"> $t->{"name"} </a>
+                </p>
+           );
+       }
+        print qq(
+            <div class="clear"></div>
+       </div>);
+   } else {
+       print   qq(
+            <p class="start">
+                    У данного  узла обработки нет дочерних.
+             </p>
+       );
+    }    
+    print qq(
+               
+                </div>
+            </div>
+        </div>
+        <div class="grid_5">
+            <div class="box round">
+                <h2> Создание новых дочерних узлов обработки </h2>
+                <div class="block">
+     );
+     
+     if ( $node_data->{"pathways"} and $access eq "host" or $access eq "write") {
+       print qq(<div style="margin:0; padding: 0: width:100%; height:100%">);
+       foreach my $t (@{$node_data->{"pathways"}}) {
+            print qq(
+            <form class="button_top_menu" method="POST">
+				<input type="hidden" name="processing_node_id" value="$node_id">
+				<input type="hidden" name="registrated_path_id" value="$t->{"path_id"}">
+				<input type="hidden" name="parent_processing_node_id" value="">
+				<input type="hidden" name="after_processing" value="1">
+				<input type="hidden" name="view" value="processing">
+				<button class="btn btn-teal node_button" type="submit"> $t->{"name"} </button>
+			</form>
+           );
+       }
+        print qq(
+            <div class="clear"></div>
+       </div>
+       );
+         
+      } else {
+             print   qq(
+            <p class="start">
+                    Из данного узла обработки невозможно создать дочерние или у вас не хватает прав доступа.
+             </p>
+       );
+          
+     }
+                
+    
+     print qq(
+                </br>
+                <h2> Удаление узла </h2>
+                <p class="start">
+     );
+     if ($access eq "host") {
+           print qq( <a href="?view=delete_node&processing_node_id=$node_id" class="delete_ref btn btn-red"> Удалить данный узел и всех его потомков </a>);
+     } else {
+           print qq(Вы не имеете прав на удаление этого узла); 
+     }
+     print qq(
+                </p>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    );
+    
 }
 ########################################################################
 1;

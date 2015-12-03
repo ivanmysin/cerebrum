@@ -227,12 +227,12 @@ sub cut_stim_shift_spikes {
 ########################################################################
 sub get_statistics {
 	my $data = shift;
-	my $cut_stims = $data->{"cut_stims"} eq 'on' ? "Да" : "Нет";
-	my $cut_time =  $data->{"cut_stims"} eq 'on' ? qq( $data->{"time_cut_stims"}, сек до и после ) : " ";
-	my $bin = $data->{"rate_by_bins"} eq 'on' ? qq(<p> Бин для интегралки $data->{"bin"} сек </p>) : " " ;
+	my $cut_stims = $data->{"cut_stims"} eq 'on' ? "Yes" : "No";
+	my $cut_time =  $data->{"cut_stims"} eq 'on' ? qq( $data->{"time_cut_stims"}, sec before and after ) : " ";
+	my $bin = $data->{"rate_by_bins"} eq 'on' ? qq(<p> Bin of rate plot  $data->{"bin"} sec </p>) : " " ;
 	my $stat = qq(
 	<div>
-		<p> Вырезались ли стимуляции? - $cut_stims $cut_time </p>
+		<p> Is stimulations utted - $cut_stims $cut_time </p>
 		$bin
 	</div>
 	);
