@@ -6,7 +6,7 @@ use warnings;
 use JSON;
 our %_getpost;
 our $_session;
-
+our $user_profile;
 
 
 sub print_header {
@@ -77,7 +77,7 @@ sub print_header {
 						
 						<div class="floatleft marginleft10">
 							<ul class="inline-ul floatleft">
-								<li>Привет, $_session->{"username"}! </li>
+								<li>Привет, $user_profile->{"name"}! </li>
 								<li><a href="?view=userprofile">Данные профиля</a></li>
 								<li><a href="?view=logout">Выйти</a></li>
 							</ul>
@@ -702,6 +702,7 @@ sub print_edit_record {
 	my $record = shift;
 	my $groups = shift;
 	my $series = shift;
+	my $access =shift;
 	my $path = PATH;
 	print qq (
 	<script src="${path}js/ckeditor/ckeditor.js"></script>
@@ -747,39 +748,48 @@ sub print_edit_record {
                                 Female
                             </td>
                         </tr>
+    );
+    
+    ########
+    if ($access eq "host") {
+        print qq(
+                            <tr>
+                                <td>
+                                    <label> Выберите эксперимнтальную серию </label>
+                                </td>
+                                <td>
+                                    <select id="select" name="series"  style="width: 300px">
+                                );
+        
+        
+        foreach my $ser (@{$series}) {
+            if ($ser->{"access_type"} ne "host") {
+                  next;
+            }
+            print qq(		<optgroup label="$ser->{'name'}">\n);
 
-                        <tr>
-                            <td>
-                                <label> Выберите эксперимнтальную серию </label>
-                            </td>
-                            <td>
-                                <select id="select" name="series"  style="width: 300px">
-                            );
-	
-	
-	foreach my $ser (@{$series}) {
-		
-		print qq(		<optgroup label="$ser->{'name'}">\n);
+            foreach my $group (@{$groups}) {
 
-		foreach my $group (@{$groups}) {
-
-			if ($group->{'parent_seria_id'} ne $ser->{'series_id'}) {
-				next;
-			};
-			if ($record->{'sub_series_id'} eq $group->{'id'} and $record->{'series_id'} == $ser->{'series_id'}) {
-				print qq(<option value="$ser->{'series_id'}|$group->{'id'}" selected> $group->{'name'} </option>);
-			} else {
-				print qq(<option value="$ser->{'series_id'}|$group->{'id'}"> $group->{'name'} </option>);
-			}
-		}
-		print qq(		</optgroup> \n );
-	};
-                            
-    print qq(                                
-                                </select>
-                            </td>
-                        </tr>
-
+                if ($group->{'parent_seria_id'} ne $ser->{'series_id'}) {
+                    next;
+                };
+                if ($record->{'sub_series_id'} eq $group->{'id'} and $record->{'series_id'} == $ser->{'series_id'}) {
+                    print qq(<option value="$ser->{'series_id'}|$group->{'id'}" selected> $group->{'name'} </option>);
+                } else {
+                    print qq(<option value="$ser->{'series_id'}|$group->{'id'}"> $group->{'name'} </option>);
+                }
+            }
+            print qq(		</optgroup> \n );
+        };
+                                
+        print qq(                                
+                                    </select>
+                                </td>
+                            </tr>
+        );
+    }
+    ####
+    print qq(
                         <tr>
                             <td>
                                 <label>Файл с записью заменить нельзя</label>
@@ -823,6 +833,7 @@ sub print_edit_record {
 sub print_edit_group {
 	my $group = shift;
 	my $series = shift;
+	my $access = shift;
 	my $path = PATH;
 	print qq (
 	<script src="${path}js/ckeditor/ckeditor.js"></script>
@@ -841,26 +852,35 @@ sub print_edit_group {
                                 <input type="text" id="grumble" name="group_name" value="$group->{'name'}"  />
                             </td>
                         </tr>
-
-                        <tr>
-                            <td>
-                                <label> Выберите эксперимнтальную серию </label>
-                            </td>
-                            <td>
-                                <select id="select" name="series"  style="width: 300px">
-                            );
-	foreach my $ser (@{$series}) {
-		if ($ser->{'series_id'} == $group->{'parent_seria_id'}) {
-			print qq(<option value="$ser->{'series_id'}" selected> $ser->{'name'}</option>\n);
-		} else {
-			print qq(<option value="$ser->{'series_id'}"> $ser->{'name'}</option>\n);
-		}
-	};
-    print qq(                                
-                                </select>
-                            </td>
-                        </tr>
-                        
+    );
+    ########################
+    if ($access eq "host") {
+        print qq(
+                            <tr>
+                                <td>
+                                    <label> Выберите эксперимнтальную серию </label>
+                                </td>
+                                <td>
+                                    <select id="select" name="series"  style="width: 300px">
+                                );
+        foreach my $ser (@{$series}) {
+            if ($ser->{"access_type"} ne "host") {
+                next
+            };
+            if ($ser->{'series_id'} == $group->{'parent_seria_id'}) {
+                print qq(<option value="$ser->{'series_id'}" selected> $ser->{'name'}</option>\n);
+            } else {
+                print qq(<option value="$ser->{'series_id'}"> $ser->{'name'}</option>\n);
+            }
+        };
+        print qq(                                
+                                    </select>
+                                </td>
+                            </tr>
+       );
+   }
+   #####################
+   print qq(                
                         <tr>
                             <td class="col1">
                                 <label> Установить данную группу текущей </label>
@@ -873,7 +893,7 @@ sub print_edit_group {
 	}                            
     print qq(                        </td>
                         </tr>
-
+                        
                         <tr>
                             <td style="vertical-align: top; padding-top: 9px;">
                                 <label> Замечания к записи </label>
@@ -881,9 +901,7 @@ sub print_edit_group {
                             <td>
                                 <textarea id="editor1" rows="10" cols="45" name="description">$group->{'description'}</textarea>
                             </td>
-                            <script>
-								 CKEDITOR.replace('editor1');
-							</script>
+                            <script> CKEDITOR.replace('editor1'); </script>
                         </tr>
 						<tr>
 							<td>
@@ -908,6 +926,7 @@ sub print_edit_group {
 ########################################################################
 sub print_edit_seria {
 	my $seria = shift;
+	my $access = shift;
 	my $path = PATH;
 	print qq (
 	<script src="${path}js/ckeditor/ckeditor.js"></script>
@@ -923,17 +942,17 @@ sub print_edit_seria {
                                 <label> Название серии </label>
                             </td>
                             <td class="col2">
-                                <input type="text" id="grumble" name="seria_name" value="$seria->{'name'}" />
+                                <input type="text" id="grumble" name="seria_name" value="$seria->{"seria"}->{'name'}" />
                             </td>
                         </tr>
-                        
+
                         <tr>
                             <td class="col1">
                                 <label> Установить данную серию текущей </label>
                             </td>
                             <td class="col2">
     );  
-    if ($seria->{'current'} == 1) {
+    if ($user_profile->{'user_profile'}->{"current_series_id"} == $seria->{'seria'}->{'series_id'}) {
 		print qq (				<input type="checkbox" name="current" checked/> \n);
 	} else {
 		print qq (				<input type="checkbox" name="current" /> \n);
@@ -941,13 +960,74 @@ sub print_edit_seria {
     print qq( 
                             </td>
                         </tr>
-
+    );
+    if ($access eq "host") {
+        print qq(
+                             <tr>
+                                <td class="col1">
+                                    <label> Предоставить права на чтение пользователю </label>
+                                </td>
+                                <td class="col2">
+                                    <input type="text" name="read_users" />
+                                    <button class="btn-icon btn-grey btn-plus adduser" type="button"><span></span> Добавить </button>
+                                    <button class="btn-icon btn-red btn-cross deleteuser" type="button"><span></span> Удалить </button>
+                                </td>
+                            </tr>
+                            
+                  
+                            <tr>
+                                <td class="col1">
+                                    <label> Предоставить права на редактирование пользователю </label>
+                                </td>
+                                <td class="col2">
+                                    <input type="text" name="write_users" />
+                                    <button class="btn-icon btn-grey btn-plus adduser" type="button"><span></span> Добавить </button>
+                                    <button class="btn-icon btn-red btn-cross deleteuser" type="button"><span></span> Удалить </button>
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                               <td class="col1">
+                                    <label> Редактировать права доступа для пользователей </label>
+                                </td>
+                                <td> 
+           );
+           foreach my $t (@{$seria->{"users"}})  {           
+                print qq(
+                <p style="width: 200px; margin: 5px">
+                    <strong>$t->{"login"}</strong>
+                    <select name="access" style="float:right">
+                        <option value="read|$t->{"user_id"}"  );
+                if ($t->{"access_type"} eq "read") {
+                    print "selected";
+                 };
+                print
+                    qq(>Чтение</option>
+                    <option value="write|$t->{"user_id"}"  );
+                if ($t->{"access_type"} eq "write") {
+                    print "selected";
+                 };
+                print 
+                qq(>Запись</option>
+                        <option value="delete_access|$t->{"user_id"}">Удалить все права</option>
+                    </select>
+                    <div class="clear"></div>
+                </p>            
+                );
+           }
+                            
+            print qq(
+                                      </td>
+                            </tr>
+            );
+        }
+        print qq(
                         <tr>
                             <td style="vertical-align: top; padding-top: 9px;">
                                 <label> Замечания к записи </label>
                             </td>
                             <td>
-                                <textarea id="editor1" rows="10" cols="45" name="description">$seria->{'description'}</textarea>
+                                <textarea id="editor1" rows="10" cols="45" name="description">$seria->{'seria'}->{'description'}</textarea>
                                 <script>CKEDITOR.replace('editor1');</script>
                             </td>
                         </tr>
@@ -956,7 +1036,7 @@ sub print_edit_seria {
 							</td>
 							<td>
 								<input type="hidden" name="view" value="edited_seria">
-								<input type="hidden" name="series_id" value="$seria->{'series_id'}">
+								<input type="hidden" name="series_id" value="$seria->{'seria'}->{'series_id'}">
 								<input type="submit" value="Отправить" >
 							</td>
 						</tr>
@@ -1108,6 +1188,7 @@ sub print_processed_data {
 				$data->{"processed_data"}->{"html_processed_code"}
             
             </div> <!-- #procc_container -->
+            <div class="clear"> </div>
 		</div> <!-- .box round first-->
 	</div>	<!-- .grid_10 -->
 	<div class="clear"> </div>
@@ -1239,7 +1320,7 @@ sub print_processed_node {
     <div class="block">
     <h2> Навигация по дочерним узлам обработки: </h2>
    );
-   if ( $node_data->{"children_nodes"} ) {
+   if ( @{$node_data->{"children_nodes"}} ) {
        print qq(<div style="margin:0; padding: 0: width:100%; height:100%">);
        foreach my $t (@{$node_data->{"children_nodes"}}) {
             print qq(
@@ -1269,7 +1350,7 @@ sub print_processed_node {
                 <div class="block">
      );
      
-     if ( $node_data->{"pathways"} and $access eq "host" or $access eq "write") {
+     if ( @{$node_data->{"pathways"}} and $access eq "host" or $access eq "write") {
        print qq(<div style="margin:0; padding: 0: width:100%; height:100%">);
        foreach my $t (@{$node_data->{"pathways"}}) {
             print qq(

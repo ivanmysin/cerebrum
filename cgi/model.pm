@@ -4,10 +4,12 @@ use lib ("/home/ivan/perl5/lib/perl5/");
 use strict;
 use warnings;
 use JSON;
+use Switch;
 use utf8;
 our %_getpost;
 our $_session;
 our $dbh;
+our $user_profile;
 
 sub mysql_select_query {
 	my $query = shift;
@@ -62,9 +64,13 @@ sub get_top_menu {
 }
 ########################################################################
 sub get_left_bar {
-	my $query = "SELECT sub_series.id, sub_series.parent_seria_id, sub_series.name FROM sub_series 
-					INNER JOIN series ON sub_series.parent_seria_id = series.series_id 
-						WHERE series.current='1'";
+	my $query = qq(
+				SELECT sub_series.id, sub_series.parent_seria_id, sub_series.name FROM sub_series 
+					INNER JOIN series ON sub_series.parent_seria_id = series.series_id
+					INNER JOIN access ON access.series_id = series.series_id
+						WHERE series.series_id  = $user_profile->{"user_profile"}->{"current_series_id"}
+						AND access.access_type IN ("host", "write", "read")
+	);
 	my @res = mysql_select_query ($query);
 	#print_arr (\@res);
 	my %left_bar;
@@ -108,52 +114,46 @@ sub added_record {
 	my @ser = split('|', $_getpost{'series'});
 	my $ser_id = int ($ser[0]);
 	my $group_id = int ($ser[-1]);
-	my $name = clear($_getpost{'record_name'});
-	my $date = clear($_getpost{'date'});
-	my $description = clear($_getpost{'description'});
 	
-	# Insert into table records received data
-	my $query = "INSERT INTO records (series_id, sub_series_id, name, date, description) VALUE ('$ser_id', '$group_id', $name, STR_TO_DATE($date, '%d/%m/%Y'), $description)";
-	&mysql_other_query($query);
+	my $user_id = $_session->{"user_id"};
+	my $access = &verify_user_access_seria($ser_id , $user_id);
 	
-	# Select data about processing receive data
-	$query = "SELECT id, directory_of_mat_files FROM registrated_nodes WHERE id_parent_nodes='0'";
-	my @registrated_nodes = mysql_select_query($query);
+	my $query  = qq(SELECT parent_seria_id AS series_id FROM sub_series WHERE id=$group_id);
+	my ($series_id) = &mysql_select_query($query);
 	
-	my $record_id = $dbh->last_insert_id(undef, undef, "records", "records_id");
-	my $registrated_nodes_id = $registrated_nodes[0]->{'id'};
+	if ( ($access  eq "host" or $access  eq "write") and $series_id->{"series_id"}==$ser_id ) {
 	
-	# Create new processing node
-	# $query = "INSERT INTO processing_nodes (id_parent_nodes, id_record, id_regisrated_node) VALUE (0, '$record_id', '$registrated_nodes_id')";
-	# &mysql_other_query($query);
-	
-	# Upload file and copy this to dir in mat format
-	# my $last_node_id = $dbh->last_insert_id(undef, undef, "processing_nodes", "id");
-	my $target_file = $record_id;
-	my $sources_file = "file";
-	my $dir_for_mat = $registrated_nodes[0] -> {'directory_of_mat_files'};
-	
-	my $receved_data = &upload_file($sources_file, $target_file);
-	
-	my $sourse_file = $receved_data->{'sourse_file'}; # Это файл полученный от пользователя
-	my $origin_file = $receved_data->{'origin_file'}; # Это файл - начало обработки
-	
-	
-	
-	my $server_params = &clear (JSON->new->utf8->encode($receved_data));
-	
-	$query = "UPDATE records SET sourse_file='$sourse_file', origin_file='$origin_file', server_json_params=$server_params WHERE records_id=$record_id";
-	&mysql_other_query($query);
-	
-=h
-	# Тут нужно сделать сохраниние параметров, полученных при сохранении, таких как частота дискретизации !!!
-	foreach my $key (keys (%{$receved_data})) {
-		if ($key eq 'uploaded_file') {next;};
-		my $val = $receved_data->{$key};
-		$query = "INSERT INTO proccessed_values (name, value, id_registrated_values, id_processing_nodes) VALUE ('$key', '$val', '1', '$last_node_id')";       
-		&mysql_other_query($query);
-	};
-=cut
+			my $name = &clear($_getpost{'record_name'});
+			my $date = &clear($_getpost{'date'});
+			my $description = &clear($_getpost{'description'});
+			
+			# Insert into table records received data
+			my $query = "INSERT INTO records (series_id, sub_series_id, name, date, description) VALUE ('$ser_id', '$group_id', $name, STR_TO_DATE($date, '%d/%m/%Y'), $description)";
+			&mysql_other_query($query);
+			
+			# Select data about processing receive data
+			$query = "SELECT id, directory_of_mat_files FROM registrated_nodes WHERE id_parent_nodes='0'";
+			my @registrated_nodes = mysql_select_query($query);
+			
+			my $record_id = $dbh->last_insert_id(undef, undef, "records", "records_id");
+			my $registrated_nodes_id = $registrated_nodes[0]->{'id'};
+
+			my $target_file = $record_id;
+			my $sources_file = "file";
+			my $dir_for_mat = $registrated_nodes[0] -> {'directory_of_mat_files'};
+			
+			my $receved_data = &upload_file($sources_file, $target_file);
+			
+			my $sourse_file = $receved_data->{'sourse_file'}; # Это файл полученный от пользователя
+			my $origin_file = $receved_data->{'origin_file'}; # Это файл - начало обработки
+			
+			
+			
+			my $server_params = &clear (JSON->new->utf8->encode($receved_data));
+			
+			$query = "UPDATE records SET sourse_file='$sourse_file', origin_file='$origin_file', server_json_params=$server_params WHERE records_id=$record_id";
+			&mysql_other_query($query);
+	}
 }
 ########################################################################
 sub get_add_group {
@@ -164,17 +164,17 @@ sub get_add_group {
 ########################################################################
 sub added_group {
 	my $parent_seria_id = int($_getpost{'series'});
-	my $name = clear($_getpost{'group_name'});
-	my $current=0;
-	if ($_getpost{'current'} eq 'on') {
-		$current=1;
-		my $query = "UPDATE sub_series SET current='0' WHERE parent_seria_id = '$parent_seria_id'";
+	my $user_id = $_session->{"user_id"};
+	my $access = &verify_user_access_seria($parent_seria_id , $user_id);
+	if ($access  eq "host" or $access  eq "write") {
+		my $name = clear($_getpost{'group_name'});
+		my $description = clear($_getpost{'description'});
+		my $query = "INSERT INTO sub_series (parent_seria_id, name, description) VALUE ($parent_seria_id, $name, $description)";
 		&mysql_other_query($query);
+		if ($_getpost{'current'} eq 'on') {
+			$user_profile->{"user_profile"}->{"current_group_id"} = $dbh->last_insert_id(undef, undef, "sub_series", "id");
+		}
 	}
-	my $description = clear($_getpost{'description'});
-	my $query = "INSERT INTO sub_series (parent_seria_id, name, current, description) VALUE ($parent_seria_id, $name, $current, $description)";
-	&mysql_other_query($query);
-	
 }
 ########################################################################
 sub added_seria {
@@ -185,18 +185,15 @@ sub added_seria {
 	#print_arr ($read_users);
 	my $write_users = $_getpost{'write_users'};
 	
-	my $current=0;
-	if ($_getpost{'current'} eq 'on') {
-		$current=1;
-		my $query = "UPDATE series SET current='0'";
-		&mysql_other_query($query);
-	}
 	# add seria in db
-	my $query = "INSERT INTO series (name, current, description) VALUE ($name, $current, $description)";
+	my $query = "INSERT INTO series (name, description) VALUE ($name, $description)";
 	&mysql_other_query($query);
 	
 	#add access for this seria in db for this user
 	my $series_id = $dbh->last_insert_id(undef, undef, "series", "series_id");
+	if ($_getpost{'current'} eq 'on') {
+		$user_profile->{"user_profile"}->{"current_series_id"} = $series_id;
+	}
 	$query = qq( INSERT INTO access (series_id, user_id, access_type) VALUES ($series_id, $_session->{"user_id"}, "host") );
 	&mysql_other_query($query);
 	
@@ -259,7 +256,7 @@ sub get_records {
 sub get_groups {
 	my $user_id = $_session->{'user_id'};
 	my $query = qq(
-		SELECT sub_series.id, sub_series.name, sub_series.description, sub_series.current, sub_series.parent_seria_id,
+		SELECT sub_series.id, sub_series.name, sub_series.description, sub_series.parent_seria_id,
 			series.name AS series_name, access.access_type FROM sub_series 
 			INNER JOIN series ON sub_series.parent_seria_id = series.series_id
 			INNER JOIN access ON series.series_id=access.series_id
@@ -296,8 +293,35 @@ sub edited_record {
 	my $date = clear($_getpost{'date'});
 	my $description = clear($_getpost{'description'});
 	my $user_id = $_session->{"user_id"};
+	
+
+	# Verify parent_seria_id and series_id must be equal
 	my $query = qq(
-		UPDATE records SET series_id='$ser_id', sub_series_id='$group_id', name=$name, 
+		SELECT series.series_id FROM 
+			series INNER JOIN sub_series 
+				ON series.series_id=sub_series.parent_seria_id
+		WHERE sub_series.id=$group_id 
+	);
+	my ($series_id) = &mysql_select_query($query);
+	if ($series_id->{"series_id"} != $ser_id) {
+		return 1;
+	}
+	# end of verification
+	my $query = qq(
+			UPDATE records SET series_id=$ser_id, sub_series_id=$group_id
+				WHERE records_id=$record_id AND series_id IN 
+		( 
+			SELECT series_id FROM access WHERE user_id=$user_id AND access_type = "host"
+		)
+	);
+	&mysql_other_query($query);
+	
+	
+	
+	
+	
+	$query = qq(
+		UPDATE records SET name=$name, 
 			date=STR_TO_DATE($date, '%d/%m/%Y'), description=$description 
 		WHERE records_id=$record_id AND series_id IN 
 		( 
@@ -305,11 +329,21 @@ sub edited_record {
 		)
 	);
 	&mysql_other_query($query);
+	
+	# series_id='$ser_id', sub_series_id='$group_id', 
+	
+	
 }
 ########################################################################
 sub get_group_by_id {
 	my $group_id = shift;
-	my $query = qq(SELECT * FROM sub_series WHERE id=$group_id);
+	my $user_id = $_session->{"user_id"};
+	my $query = qq(
+		SELECT sub_series.id, sub_series.parent_seria_id, sub_series.name, sub_series.description 
+				FROM sub_series INNER JOIN access ON
+						sub_series.parent_seria_id=access.series_id
+				WHERE sub_series.id=$group_id AND access.access_type IN ("host", "write") AND access.user_id=$user_id
+	);
 	my @res = &mysql_select_query($query);
 	return $res[0]; 
 }
@@ -320,49 +354,199 @@ sub edited_group {
 	my $series_id = int($_getpost{'series'});
 	my $description = &clear($_getpost{'description'});
 	my $user_id = $_session->{"user_id"};
-	my $current = 0;
-	if ($_getpost{'current'} eq 'on') {
-		$current = 1;
-		my $query = qq(
-			UPDATE sub_series SET current=0 
-				WHERE parent_seria_id=$series_id AND parent_seria_id IN
-					( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") )
-			);
-		&mysql_other_query($query);
-	}
+	
 	my $query = qq(
-		UPDATE sub_series SET parent_seria_id=$series_id, name=$name,
-				current=$current, description=$description 
+		UPDATE sub_series SET  
+				name=$name, description=$description 
 			WHERE id=$group_id AND parent_seria_id IN
 				( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") )
 		);
 	&mysql_other_query($query);
+	
+	$query = qq(
+		UPDATE sub_series SET parent_seria_id=$series_id, 
+			WHERE id=$group_id AND parent_seria_id IN
+				( SELECT series_id FROM access WHERE user_id=$user_id AND access_type = "host" )
+	);
+	&mysql_other_query($query);
+	
+	
+	if ($_getpost{'current'} eq 'on') {
+		$user_profile->{"user_profile"}->{"current_group_id"} = $group_id;
+	}
 }
 ########################################################################
 sub get_seria_by_id {
 	my $series_id = shift;
-	my $query = "SELECT * FROM series WHERE series_id='$series_id'";
+	my $query = qq(
+		SELECT * FROM series WHERE series_id=$series_id
+	);
 	my @res = &mysql_select_query($query);
-	return $res[0];
+	
+	$query = qq(
+		SELECT users.id AS user_id, users.login, access.access_type 
+				FROM users INNER JOIN access ON users.id = access.user_id 
+						WHERE access.series_id=$series_id 
+						AND  access.access_type != "host"
+	);
+	my @users =  &mysql_select_query($query);
+
+	my $seria = {
+		"seria" => $res[0],
+		"users" => \@users,
+	};
+	
+	return  $seria;
 }
-########################################################################
+#######################################################################
 sub edited_seria {
+	my $access = shift;
 	my $series_id = int($_getpost{'series_id'});
 	my $name = &clear($_getpost{'seria_name'});
 	my $description = &clear($_getpost{'description'});
-	my $current = 0;
+
 	my $user_id = $_session->{'user_id'};
-	if ($_getpost{'current'} eq 'on') {
-		$current = 1;
-		my $query = qq(UPDATE series SET current=0 WHERE series_id IN ( SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") ) );
-		&mysql_other_query($query);
-	}
 	my $query = qq( 
-			UPDATE series SET name=$name, description=$description, current='$current' 
+			UPDATE series SET name=$name, description=$description 
 				WHERE series_id=$series_id AND series_id IN (SELECT series_id FROM access WHERE user_id=$user_id AND access_type IN ("host", "write") )
 			);
 	&mysql_other_query($query);
+	
+	if ($_getpost{'current'} eq 'on') {
+		$user_profile->{"user_profile"}->{"current_series_id"} = $series_id;
+	}
+	
+	
+	if ($access eq "host") {
+		my $query  = qq(
+				SELECT access.id AS access_id, access.user_id, users.login, access.access_type 
+						FROM access INNER JOIN users ON users.id = access.user_id
+				WHERE access.series_id=$series_id AND access.access_type != "host"
+		);
+		
+		my @users_acess_old = &mysql_select_query($query); 
+		my @users_acess_edit = $_getpost{"access"};
+		
+		# проверяем не имеют ли уже пользователи в запросе на открытие им прав на запись на серию
+		if (ref ($_getpost{"write_users"}) eq "ARRAY") {
+				foreach my $new_write_user  (@{$_getpost{"write_users"}}) {
+						$new_write_user  = &trim($new_write_user);
+						if (not &search_user_in_array($new_write_user, \@users_acess_old ) ) {
+							&add_access($new_write_user, $series_id, "write");
+						}
+				}
+		} else {
+				my $new_write_user = &trim($_getpost{"write_users"});
+				if (not &search_user_in_array($new_write_user, \@users_acess_old ) ) {
+					&add_access($new_write_user, $series_id, "write");
+				}
+		}
+	
+		 my @users_acess_old = &mysql_select_query($query);  # обновляем массив старых прав доступа, чтою не вставить лишнего
+	
+		# проверяем не имеют ли уже пользователи  в запросе на открытие им прав на чтение на серию
+		if (ref($_getpost{"read_users"}) eq "ARRAY") {
+				foreach my $new_read_user  (@{$_getpost{"read_users"}}) {
+						$new_read_user = &trim($new_read_user);
+						if (not &search_user_in_array($new_read_user, \@users_acess_old ) ) {
+							&add_access($new_read_user, $series_id, "read");
+						}
+				}	
+		} else {
+			my $new_read_user  = &trim($_getpost{"read_users"});
+			if (not &search_user_in_array($new_read_user, \@users_acess_old ) ) {
+				&add_access($new_read_user, $series_id, "read");
+			}
+		}
+
+
+				
+		
+		if ( ref($_getpost{"access"}) eq "ARRAY"  ) {
+			foreach my $user ( @{$_getpost{"access"}} ) {
+				my ($access_type, $user_id) = split("\\|", $user);
+				$user_id = int($user_id);
+				my $new_access = &compare_access_type($user_id, &trim($access_type), \@users_acess_old);
+				if ($new_access) {
+					&update_access_type($user_id, $series_id, $new_access);
+				}
+			}
+		} else {
+			my $user = &trim($_getpost{"access"});
+			my ($access_type, $user_id)= split("\\|", $user);
+			$user_id = int($user_id);
+			my $new_access = &compare_access_type($user_id, &trim($access_type), \@users_acess_old);
+			if ($new_access) {
+				&update_access_type($user_id, $series_id, $new_access);
+			}
+		}
+	 
+		
+		
+	}
+	
 }
+########################################################################
+sub add_access {
+	my $login = shift;
+	my $series_id = shift;
+	my $access_type = shift;
+	my $query = qq(SELECT id FROM users WHERE login='$login');
+	my ($user_id) = &mysql_select_query($query); 
+	$query = qq(
+		INSERT INTO access (user_id, series_id, access_type) 
+			VALUES ($user_id->{"id"}, $series_id, '$access_type')
+	);
+	&mysql_other_query($query);
+}
+########################################################################
+sub update_access_type {
+	my $user_id = shift;
+	my $series_id = shift;
+	my $new_access = shift;
+
+	if ($new_access  eq "delete_access")	{
+		my $query = qq(
+				DELETE FROM access WHERE user_id=$user_id AND series_id=$series_id
+		);
+		&mysql_other_query($query);
+		return 1;
+	}
+	
+	if ($new_access  eq "write" or $new_access  eq "read") {
+		my $query = qq(
+			UPDATE access SET access_type='$new_access' WHERE user_id=$user_id AND series_id=$series_id
+		);
+		&mysql_other_query($query);
+		return 1;
+	}
+	 return 0;
+}
+########################################################################
+sub compare_access_type {
+	my $user_id = shift;
+	my $access_type = shift;
+	my $arr = shift;
+	
+	foreach my $t (@{$arr}) {
+		if ( $user_id == $t->{"user_id"} and $access_type ne $t->{"access_type"} ) {
+			return $access_type;
+		} 
+	} 
+	return 0;
+}
+########################################################################
+sub search_user_in_array {
+	my $user_for_search = shift;
+	my $arr = shift;
+	foreach my $t (@{$arr}) {
+		if ($user_for_search eq $t->{"login"}) {
+			return 1;
+		}
+	}
+	return 0; 
+}
+
 ########################################################################
 sub delete_record {
 	my $record_id = shift;
@@ -394,10 +578,15 @@ sub delete_seria {
 }
 ########################################################################
 sub get_home_data {
-	my $query = "SELECT records_id, records.name AS record_name, sub_series.id AS group_id, sub_series.name AS group_name, series.name AS series_name 
+	my $query = qq(
+	SELECT records_id, records.name AS record_name, sub_series.id AS group_id, sub_series.name AS group_name, series.name AS series_name 
 					FROM records RIGHT JOIN sub_series ON records.sub_series_id=sub_series.id 
 						INNER JOIN series ON sub_series.parent_seria_id=series.series_id 
-							WHERE series.current=1 ORDER BY sub_series.current DESC, sub_series.name";
+						INNER JOIN access ON access.series_id = series.series_id
+							WHERE series.series_id = $user_profile->{"user_profile"}->{"current_series_id"}
+								AND access.user_id = $user_profile->{"id"}
+	);
+
 	my @res = &mysql_select_query($query);
 	
 	
@@ -408,7 +597,10 @@ sub get_home_data {
 			INNER JOIN records ON processing_nodes.id_record=records.records_id
 			INNER JOIN sub_series ON records.sub_series_id=sub_series.id
 			INNER JOIN series ON series.series_id = sub_series.parent_seria_id
-			WHERE series.current=1 AND sub_series.current=1
+			INNER JOIN access ON access.series_id = series.series_id
+			WHERE  series.series_id = $user_profile->{"user_profile"}->{"current_series_id"}
+				AND sub_series.id= $user_profile->{"user_profile"}->{"current_group_id"}
+				AND access.user_id = $user_profile->{"id"}
 			ORDER BY processing_nodes.id_record
 	);
 	
@@ -440,7 +632,7 @@ sub get_home_data {
 		<a href=?view=processed_node&processing_node_id=$t->{"id"}> $t->{"name"} </a> 
 
 		);
-		# 		<div class="node_statistics"> $t->{"statistics"} </div>
+
 		my $node = {
 			"id" => $t->{"id"},
 			"parent" => $t->{"parent"},
@@ -448,7 +640,7 @@ sub get_home_data {
 			'state' => {
 				'opened' => 1,
 			},
-			"icon" => "False", #PATH."alv.gif",
+			"icon" => "False", 
 		};
 		push($tree[$tree_ind]->{"json_tree"}->{'core'}->{'data'}, $node);
 	};
@@ -701,8 +893,6 @@ sub save_node_state {
 ########################################################################
 # Функция сохраняет параметры, обрабатывающиеся на стороне сервера
 sub save_param {
-	$dbh->do("set character set utf8");
-	$dbh->do("set names utf8");
 	my $node_id = shift;
 	my $param_ref = shift;
 	my $statistics = shift;
@@ -748,10 +938,9 @@ sub registrate_user {
 	my $surname = &clear($_getpost{"usersurname"});
 	my $info = &clear($_getpost{"userinfo"});
 	my $query = qq(
-	INSERT INTO users (login, password, name, patronymic, surname, info)
-		VALUES ($login, $password, $name, $patronymic, $surname, $info)
+	INSERT INTO users (login, password, name, patronymic, surname, info, user_profile)
+		VALUES ($login, $password, $name, $patronymic, $surname, $info, "{}")
 	);
-	print $query;
 	my $res = &mysql_other_query($query);
 	if ($res) {
 		my $user_id = $dbh->last_insert_id(undef, undef, "users", "id");
@@ -871,4 +1060,57 @@ sub delete_node {
 		
 }
 ########################################################################
+sub set_user_profile {
+	my $user_id = $_session->{"user_id"};
+	my $query = qq(SELECT id, name, user_profile  FROM users WHERE id=$user_id);
+	my @res = &mysql_select_query($query);
+	our $user_profile = $res[0];
+	$user_profile->{"user_profile"} = from_json($user_profile->{"user_profile"});
+
+}
+########################################################################
+sub save_user_profile {
+	my $user_id = $_session->{"user_id"};
+	#print_arr($user_profile);
+	my $profile = &clear(JSON->new->utf8(1)->encode($user_profile->{"user_profile"}));
+	my $query = qq(
+		UPDATE users SET user_profile = $profile  WHERE id=$user_id
+	);
+	my $res = &mysql_other_query($query);
+}
+#######################################################################
+sub verify_user_access_seria {
+	 my $series_id = shift; 
+	 my $user_id = shift;
+	 my $query = qq(SELECT access_type FROM access WHERE series_id=$series_id AND user_id=$user_id);
+	 my @access = &mysql_select_query($query);
+	 return $access[0]->{"access_type"};
+}
+#######################################################################
+sub verify_user_access_group {
+	my $group_id = shift;
+	my $user_id = shift;
+	my $query = qq(
+		SELECT access.access_type 
+				FROM access INNER JOIN sub_series 
+					 ON sub_series.parent_seria_id = access.series_id
+				WHERE access.user_id=$user_id AND sub_series.id= $group_id
+	);
+	 my @access = &mysql_select_query($query);
+	 return $access[0]->{"access_type"};
+}
+#######################################################################
+sub verify_user_access_record {
+	my $record_id = shift;
+	my $user_id = shift;
+	my $query = qq(
+		SELECT access.access_type
+				FROM access INNER JOIN records
+						ON access.series_id=records.series_id
+			WHERE records.records_id=$record_id AND access.user_id=$user_id
+	);
+	my @access = &mysql_select_query($query);
+	return $access[0]->{"access_type"};
+}
+#######################################################################
 1;

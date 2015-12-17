@@ -18,6 +18,7 @@ use view;
 &start_session();
 our %_getpost;
 our $_session;
+our $user_profile;
 
 print "Content-Type: text/html charset=utf-8\n\n";
 
@@ -46,6 +47,12 @@ if ($view eq "registration_query") {
 if (not $_session->{"user_id"} and $view ne "authorization" and $view ne "registration") { 
 	# if user is not authorized and query page is not authtorization and registration
 	$view  =  "authorization";
+} 
+
+if ($_session->{"user_id"}) {
+	# if user is authorized load profile
+	&set_user_profile();
+	our $user_profile;	
 }
 
 # controller 
@@ -93,7 +100,10 @@ switch ($view) {
 	}
 	
 	case ('edited_seria') {
-		&edited_seria();
+		my $user_id = $_session->{"user_id"};
+		my $series_id = int($_getpost{"series_id"});
+		my $access = &verify_user_access_seria($series_id, $user_id);
+		&edited_seria($access);
 		$view = 'series';
 	}
 	
@@ -103,7 +113,7 @@ switch ($view) {
 		$view = 'records';
 	}
 	
-	case ('delete_group') {
+	case ('delete_group') { 
 		my $group_id = int ($_getpost{'group_id'});
 		&delete_group($group_id);
 		$view = 'groups';
@@ -189,28 +199,39 @@ switch ($view) {
 	case ('series') {
 		my $series = &get_series();
 		&print_series($series);
-		
 	}
 	
 	case ('edit_record') {
 		my $record_id = int($_getpost{'record_id'});
-		my $record = &get_record_by_id($record_id);
-		my $groups = &get_groups();
-		my $series = &get_series();
-		&print_edit_record($record, $groups, $series);
+		my $user_id = $_session->{"user_id"};
+		my $access = &verify_user_access_record($record_id, $user_id);
+		if ($access eq "host" or $access eq "write") {
+				my $record = &get_record_by_id($record_id);
+				my $groups = &get_groups();
+				my $series = &get_series();
+				&print_edit_record($record, $groups, $series, $access);
+		}
 	}
 	
 	case ('edit_group') {
 		my $group_id = int($_getpost{'group_id'});
-		my $group = &get_group_by_id($group_id);
-		my $series = &get_series();
-		&print_edit_group($group, $series);
+		my $user_id = $_session->{"user_id"};
+		my $access = &verify_user_access_group($group_id, $user_id);
+		if ($access eq "host" or $access eq "write") {
+				my $group = &get_group_by_id($group_id);
+				my $series = &get_series();
+				&print_edit_group($group, $series, $access);
+		}
 	}
 	
 	case ('edit_seria') {
 		my $series_id = int($_getpost{'series_id'});
-		my $seria = &get_seria_by_id($series_id);
-		&print_edit_seria($seria);
+		my $user_id = $_session->{"user_id"};
+		my $access = &verify_user_access_seria($series_id, $user_id);
+		if ($access  eq "write" or $access eq "host") {
+				my $seria = &get_seria_by_id($series_id);
+				&print_edit_seria($seria, $access);
+		}
 	}
 	
 	case ('processing') {
@@ -248,7 +269,7 @@ switch ($view) {
 	case ("get_processed") {
 		my $processing_node_id = int($_getpost{"processing_node_id"});
 		my $access = &verify_user_acceess_to_processing_node($processing_node_id);
-		if ( $access eq "host" or $access eq "write" or $access eq "read") {
+		if ( $access eq "host" or $access eq "write" or $access eq "read" ) {
 			my $processed_data = &get_processed_data($processing_node_id);
 			&print_processed_data($processed_data, $access);
 		} else {
@@ -276,6 +297,9 @@ switch ($view) {
 }	
 
 &print_footer();
+if ($_session->{"user_id"}) {
+	&save_user_profile();
+}
 &save_session();
 
 

@@ -23,7 +23,7 @@ use JSON;
 our %_getpost;
 our $_session;
 our $dbh;
-
+our $user_profile;
 
 sub set_config {
 	# set configuration constant and connect to db
