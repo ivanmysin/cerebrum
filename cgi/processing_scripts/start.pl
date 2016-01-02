@@ -44,30 +44,34 @@ $data = double($data);
 
 switch ($regime) {
 	case("read") {
-		
-		my $intT = -1; # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -1
+		my $start_ind;
+		my $end_ind;
+		if ($_getpost{"load"} eq "start") {
+				$start_ind = 0;
+				$end_ind = 10000;
+		} else {
+				$start_ind = $_getpost{"minX"} * $fd;
+				$end_ind = $_getpost{"maxX"} * $fd;
+		}
+
 		my @send_array;
 		my $title = 'Potential';
 		for (my $i=0; $i<$nchs; $i++) {
-			my $ch = $data(0:$intT, $i);
+			my $ch = $data(:, $i);
 			$ch = rint(100 * ( ($ch - min($ch)) / (max($ch) - min($ch)) ) )/100;
-			my $t = rint(1000*sequence(nelem($ch)) / $fd) / 1000;
-			my @x = list ($t);
-			my @y = list ($ch);
-			my $xref = \@x;
-			my $yref = \@y;
+
 			my %hash = (
 				'title' => $title, 
 				'Xtitle' => 'time, s',
 				'Ytitle' => 'channel '.($i + 1),
-				'binGridX' => 0.2,
+				'fd' => $fd,
+				'binGridX' => 0.02,
 				'binGridY' => 0.2,
-				'minX' => 0, 
-				'maxX' => 1,
+				'minX' => $start_ind/$fd, 
+				'maxX' => $end_ind/$fd,
 				'minY' => -0.2, 
 				'maxY' => 1.2,
-				'x' => $xref,
-				'y' => $yref,
+				'y_vals' => [ list ( $ch($start_ind:$end_ind)  ) ],
 			);
 			$send_array[$i] = \%hash;
 		}

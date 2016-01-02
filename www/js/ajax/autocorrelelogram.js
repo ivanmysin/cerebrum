@@ -43,7 +43,7 @@ App.Funcs = {
 	  var m = Math.pow(10,n);
 	  return Math.round(x*m)/m;
 	},
-
+	
 	make_plots: function (recevedData) {
 
 
@@ -137,7 +137,6 @@ App.Views.Zooming = Backbone.View.extend({
 
 	initialize: function() {
 		this.render();
-
 
 		this.minYvalue = this.$el.find(".minYvalue");
 		this.maxYvalue = this.$el.find(".maxYvalue");
