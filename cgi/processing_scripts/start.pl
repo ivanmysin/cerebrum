@@ -50,8 +50,8 @@ switch ($regime) {
 				$start_ind = 0;
 				$end_ind = 10000;
 		} else {
-				$start_ind = $_getpost{"minX"} * $fd;
-				$end_ind = $_getpost{"maxX"} * $fd;
+				$start_ind = int ($_getpost{"minX"} * $fd);
+				$end_ind = int ($_getpost{"maxX"} * $fd);
 		}
 
 		my @send_array;
@@ -61,17 +61,17 @@ switch ($regime) {
 			$ch = rint(100 * ( ($ch - min($ch)) / (max($ch) - min($ch)) ) )/100;
 
 			my %hash = (
-				'title' => $title, 
+				'title' => 'channel '.($i + 1), 
 				'Xtitle' => 'time, s',
-				'Ytitle' => 'channel '.($i + 1),
+				'Ytitle' => $title,
 				'fd' => $fd,
-				'binGridX' => 0.02,
-				'binGridY' => 0.2,
 				'minX' => $start_ind/$fd, 
 				'maxX' => $end_ind/$fd,
 				'minY' => -0.2, 
 				'maxY' => 1.2,
 				'y_vals' => [ list ( $ch($start_ind:$end_ind)  ) ],
+				'start_ind_of_loaded' => $start_ind,
+				'end_ind_of_loaded' => $end_ind, 
 			);
 			$send_array[$i] = \%hash;
 		}

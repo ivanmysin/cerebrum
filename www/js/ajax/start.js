@@ -141,6 +141,13 @@ App.Models.TYPlot = Backbone.Model.extend({
 		channel_ind: 0,
 		channel_name: "channel",
 	},
+
+	validate: function( attrs, options ) {
+		if (attrs.minX < 0) {
+			return "minX must be not negative";
+		}
+	},
+
 });
 
 // Collection of plots models
@@ -205,15 +212,26 @@ App.Views.ChannelPlot = Backbone.View.extend({
 		var minY = this.model.get("minY");
 		var maxY = this.model.get("maxY");
 		
-		// начать работать отсюда!!!!!
-		// нужно переделать, чтобы массив х рассчитавался тута на стороне клиента!!!!
+	
 		var fd = this.model.get("fd"); 
-		
-		var y = this.model.get("y_vals");
-		var x = this.fd2Xarray(fd, minX, y.length);
 
-		var binGridX = parseFloat(this.model.get("binGridX"));
-		var binGridY = parseFloat(this.model.get("binGridY"));
+		var user_start_ind = parseInt(minX*fd);
+		var user_end_ind = parseInt(maxX*fd);
+		
+		var start_ind = user_start_ind - this.model.get("start_ind_of_loaded");
+		var end_ind = start_ind + user_end_ind - user_start_ind + 1;
+
+		/*
+		var y_full = this.model.get("y_vals");
+		var x_full = this.fd2Xarray(fd, this.model.get("start_ind_of_loaded")/fd, y_full.length);
+		var xydata = this.getYslice(x_full, minX, maxX, y_full); 
+		*/
+		var y = this.model.get("y_vals").slice(start_ind, end_ind); //xydata.y;
+		var x = this.fd2Xarray(fd, minX, y.length); //xydata.x;
+		
+
+		var binGridX = (maxX - minX) / 20;  //parseFloat(this.model.get("binGridX"));
+		var binGridY = (maxY - minY) / 10;  //parseFloat(this.model.get("binGridY"));
 
 
 		var points = "";
@@ -270,7 +288,7 @@ App.Views.ChannelPlot = Backbone.View.extend({
 		
 		// form svg code
 		var svg = "<svg width=\"" + (width + 2*shiftX) + "px\" height=\"" + (height + 2*shiftY) + "px\" class=\"outSVG\"> \n";
-		// svg += "<text x=" + (shiftX + (width + this.model.get( ("plot_label").length)/2) + " y=" + (shiftY - 30) + " class=\"plotTitle\" >" + this.model.attributes.plot_label + "</text> \n";
+		svg += "<text x=" + (shiftX + (width + (this.model.get("title").length))/2) + " y=" + (shiftY - 30) + " class=\"plotTitle\" >" + this.model.get("title") + "</text> \n";
 		
 		// add inside svg
 		svg += "<svg x=\"" + shiftX + "px\" y=\"" + shiftY + "px\" width=\"" + width + "px\" height=\"" + height + "px\" viewBox=\"0 0 " + width + " " + height + "\"  class=\"innerSvg\" > \n";
@@ -280,13 +298,36 @@ App.Views.ChannelPlot = Backbone.View.extend({
 		svg += "</svg>\n";
 
 		// add labels
-		svg += "<text x=" + (shiftX + (width + this.model.attributes.x_labels.length)/2) + " y=" + (height + shiftY + 35) + "  class=\"Xtitle\" > " + this.model.attributes.x_labels + "</text> \n";
-		svg += "<text x=" + 2 + " y=" + (shiftY - 10) + " class=\"Ytitle\"> " + this.model.attributes.y_labels + " </text> \n"; //
+		svg += "<text x=" + (shiftX + (width + this.model.get("Xtitle").length)/2) + " y=" + (height + shiftY + 35) + "  class=\"Xtitle\" > " + this.model.get("Xtitle") + "</text> \n";
+		svg += "<text x=" + 2 + " y=" + (shiftY - 10) + " class=\"Ytitle\"> " + this.model.get("Ytitle") + " </text> \n"; //
 		svg += labeleGridX;
 		svg += labeleGridY;
 		svg += "</svg>";
 
 		return svg;
+	},
+	getYslice: function (x_full, minX, maxX, y_full) {
+		var xydata = {
+			x: [],
+			y: [],
+		};
+		if ( x_full[0]==minX && x_full[x_full.length-1] == maxX) {
+			xydata = {
+			x: x_full,
+			y: y_full,
+		};
+		} else {
+			for (var i=0; i<x_full.length; i++) {
+				if (x_full[i]>maxX) {
+					break;
+				}
+				if ( x_full[i]>=minX ) {
+					xydata.x.push(x_full[i]);
+					xydata.y.push(y_full[i]);
+				}
+			}
+		};
+		return xydata;
 	},
 
 	plot_to_svg_x:	function (x, width, minX, maxX) {
@@ -360,9 +401,9 @@ App.Views.ChannelPlot = Backbone.View.extend({
 		return (result);
 	},
 
-	fd2Xarray: function(fd, minX, ylength) {
-		var x = [minX];
-		var xt = minX;
+	fd2Xarray: function(fd, loadedminX, ylength) {
+		var x = [loadedminX];
+		var xt = loadedminX;
 		var delta_t = 1/fd;
 		for (var i = 0; i < ylength; i++) {
 			xt += delta_t;
@@ -460,8 +501,8 @@ App.Views.XaxisView = Backbone.View.extend({
 		'click .toStartX': 'toStartEndX',
 		'click .toEndX': 'toStartEndX', 
 
-		'click .upScaleX': 'reScaleY', 
-		'click .downScaleX': 'reScaleY', 
+		'click .upScaleX': 'reScaleX', 
+		'click .downScaleX': 'reScaleX', 
 
 		'click .replotByUserXminmax': 'replotByUserXminmax',  
 	},
@@ -473,8 +514,9 @@ App.Views.XaxisView = Backbone.View.extend({
 		this.maxXvalue = this.$el.find(".maxXvalue");
 		this.stepX = this.$el.find(".stepNavigation");
 		this.scalingCoefX = this.$el.find(".scalingCoefX");
-
-		// this.model.on('change', this.renderPlot, this);
+		this.loading_indicator = this.$el.find(".loading");
+		$(this.loading_indicator).fadeOut();
+		
 		return this;
 
 	},
@@ -499,22 +541,29 @@ App.Views.XaxisView = Backbone.View.extend({
 		var minX = parseFloat( this.collection.at(0).get("minX") );
 		var maxX = parseFloat( this.collection.at(0).get("maxX") );
 
+		var pminX = minX; // prediction for loading minX
+		var pmaxX = maxX; // prediction for loading maxX
+
 		if ( App.Funcs.in_arr("toStartX", direction) ) {
 			minX -= stepNavigation;
 			maxX -= stepNavigation;
+			pminX = minX - 3*stepNavigation;
+			pmaxX = maxX;
 		}
 		
 		if ( App.Funcs.in_arr("toEndX", direction) ) {
 			minX += stepNavigation;
 			maxX += stepNavigation;
+			pminX = minX;
+			pmaxX = maxX + 3*stepNavigation;
 		}
 
-		this.loadNewData(minX, maxX);
+		this.loadNewData(minX, maxX, pminX, pmaxX);
 
 		return this;
 	},
 
-	reScaleY: function(eventObj) {
+	reScaleX: function(eventObj) {
 		
 		var sCoef = parseFloat( this.scalingCoefX.val() );
 		var minX = parseFloat( this.collection.at(0).get("minX")  );
@@ -541,36 +590,72 @@ App.Views.XaxisView = Backbone.View.extend({
 
 		minX = middle - 0.5*dif;
 		maxX = middle + 0.5*dif;
+
+
+		var pminX = minX - dif; // prediction for loading minX
+		var pmaxX = maxX + dif; // prediction for loading maxX
+
 		
-		this.loadNewData(minX, maxX);
+		
+		this.loadNewData(minX, maxX, pminX, pmaxX);
 		return this;
 	},
+
 	replotByUserXminmax: function(eventObj) {
 			 
 		var minX = parseFloat ( this.minXvalue.val() );
 		var maxX =  parseFloat ( this.maxXvalue.val() );
+
+		var pminX = minX*0.5; // prediction for loading minX
+		var pmaxX = maxX*2; // prediction for loading maxX
 		
 		if ( maxX < minX ) { return; }
 	
-		this.loadNewData(minX, maxX);
+		this.loadNewData(minX, maxX, pminX, pmaxX);
 		return this;
 	},
 
 
-	loadNewData: function(minX, maxX) {
+	loadNewData: function(minX, maxX, pminX, pmaxX) {
 
-		// тут нужно написать получение и обработку данных от сервера !!!
-    	var query_data = {
+		var fd = this.collection.at(0).get("fd");
+		var start_ind = this.collection.at(0).get("start_ind_of_loaded");
+		var end_ind = this.collection.at(0).get("end_ind_of_loaded");
+
+		
+		if ( (parseInt(minX*fd)>= start_ind) && (parseInt(maxX*fd) <= end_ind) ) {
+			if (minX < 0) {
+				minX = 0;
+			};
+
+			this.collection.each(function(model, ind){
+				model.set({
+					'minX' : minX, 
+					'maxX' : maxX ,
+				});
+			});
+
+			return this;
+		};
+
+		if (pminX < 0) {
+			pminX = 0;
+		};
+
+		
+	   	var query_data = {
 			'processing_node_id': App.processing_node_id,
 			'registrated_path_id': App.registrated_path_id,
 			'parent_processing_node_id': App.parent_processing_node_id,
 			'record_id': App.record_id,
 			'regime': 'read',
 			'load' : 'continue',
-			'minX' : minX,
-			'maxX' : maxX,
+			'minX' : pminX,
+			'maxX' : pmaxX,
 		};
-	
+
+		
+		$(this.loading_indicator).fadeIn();
 		var url =  App.server_script;
 		$.ajax ({
 			url: url,
@@ -585,9 +670,12 @@ App.Views.XaxisView = Backbone.View.extend({
 						"minX": minX,
 						"maxX": maxX,
 						"y_vals" : loaded[ind].y_vals,
+						'start_ind_of_loaded': loaded[ind].start_ind_of_loaded,
+						'end_ind_of_loaded': loaded[ind].end_ind_of_loaded, 
 					};
 					model.set(new_channels_data);
 				});
+				$(this.loading_indicator).fadeOut();
 			}
 		});
 		return this;
